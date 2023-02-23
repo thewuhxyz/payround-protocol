@@ -46,6 +46,18 @@ export const fetchDegenAccount = async (key: PublicKey) => {
 	return await program.account.degenAccount.fetch(key);
 };
 
+export const fetchTaskAccount = async (key: PublicKey) => {
+	return await program.account.task.fetch(key);
+};
+
+export const fetchTaskGroupAccount = async (key: PublicKey) => {
+	return await program.account.taskGroup.fetch(key);
+};
+
+export const fetchTaskListAccount = async (key: PublicKey) => {
+	return await program.account.tasklist.fetch(key);
+};
+
 export const fetchTokenAccount = async (address: PublicKey) => {
 	return await getAccount(connection, address);
 };

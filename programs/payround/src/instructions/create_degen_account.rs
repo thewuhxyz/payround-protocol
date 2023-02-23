@@ -2,7 +2,7 @@ use anchor_lang::{prelude::*};
 use anchor_spl::token::{TokenAccount, Mint, Token};
 use anchor_spl::associated_token::AssociatedToken;
 
-use crate::state::DegenAccount;
+use crate::state::{DegenAccount};
 use crate::constants::*;
 
 #[derive(Accounts)]
@@ -16,7 +16,7 @@ pub struct CreateDegenAccount <'info> {
     space=512+8
   )]
   pub degen_account: Account<'info, DegenAccount>,
-  
+
   #[account(mut)]
   pub payer: Signer<'info>,
 
