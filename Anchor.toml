@@ -2,14 +2,18 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-payround = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+payround = "BQpMmaGZ9wgYvUQGcBarTr3puuDid1W3tUj7Fz3pWUkV"
+[programs.devnet]
+payround = "BQpMmaGZ9wgYvUQGcBarTr3puuDid1W3tUj7Fz3pWUkV"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
-wallet = "/Users/thewuh/.config/solana/id.json"
+cluster = "devnet"
+wallet = "/Users/thewuh/.config/solana/payround_deployer.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+payround_test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/payround.ts"
+mockusdc = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/mockusdc.ts"
