@@ -1,6 +1,6 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { fetchDegenAccount, fetchTaskAccount, fetchTaskGroupAccount, fetchTaskListAccount, fetchTokenAccount, getAta, getPda, keys, program, usdcTransfer, provider } from "./utils";
-import { SystemProgram, Keypair, PublicKey, } from "@solana/web3.js";
+import { SystemProgram, Keypair, PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import {createThread, getThreadAddress, getThreadProgram} from "@clockwork-xyz/sdk"
 import * as anchor from '@project-serum/anchor'
 
@@ -21,6 +21,8 @@ describe("payround", () => {
     const taskkey = new PublicKey(
 			"GdtiZm5Hs9QNM1AAyuio5jfjFYW2zH7pBKPq1eZJxx68"
 		);
+
+    const signer = new PublicKey("C1ockworkPayer11111111111111111111111111111");
 
 
 	// it("creates a degen account", async () => {
@@ -133,64 +135,132 @@ describe("payround", () => {
     
 	// })
 
+  // it("process task", async () => {
+	// 	const threadLabel = "f";
+	// 		const threadAuthority = manager.publicKey;
+	// 		const payer = manager.publicKey;
+	// 		const threadAddress = getThreadAddress(threadAuthority, threadLabel);
+
+	// 	const tx = await program.rpc.processTaskTestIx({
+	// 			accounts: {
+	// 				accountAta: getAta().degenAcctAta,
+	// 				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+	// 				degenAccount: getPda().degenAcctKey,
+	// 				recipientAta: getAta().degenAta,
+	// 				systemProgram: SystemProgram.programId,
+	// 				task: taskkey,
+	// 				threadAuthority: manager.publicKey,
+	// 				tokenProgram: TOKEN_PROGRAM_ID,
+	// 				rent: SYSVAR_RENT_PUBKEY,
+	// 			},
+  //       signers: [manager]
+	// 	});
+
+  //   console.log("tx:", tx);
+    
+	// })
+
   it("process a task", async () => {
-		const threadLabel = "b";
+		const threadLabel = "o";
 		const threadAuthority = manager.publicKey;
 		const payer = manager.publicKey;
 		const threadAddress = getThreadAddress(threadAuthority, threadLabel);
 
+		// todo: Need to airdrop or transfer sol to thread account
+
     console.log("theadAddress", threadAddress);
+
+    const buildProcessTaskInstruction = async () => {
+			return await program.methods
+				.processTask()
+				.accounts({
+					accountAta: getAta().degenAcctAta,
+					associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+					degenAccount: getPda().degenAcctKey,
+					recipientAta: getAta().degenAta,
+					systemProgram: SystemProgram.programId,
+					task: taskkey,
+					thread: threadAddress,
+					// threadAuthority: manager.publicKey,
+					tokenProgram: TOKEN_PROGRAM_ID,
+					rent: SYSVAR_RENT_PUBKEY,
+				})
+				.instruction();
+		};
+
+    const targetIx = await buildProcessTaskInstruction()
     
 
-		const targetIx = program.instruction.processTask({
-			accounts: {
-				accountAta: getAta().degenAcctAta,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				degenAccount: getPda().degenAcctKey,
-				recipientAta: getAta().degenAta,
-				systemProgram: SystemProgram.programId,
-				task: taskkey,
-				thread: threadAddress,
-				threadAuthority: manager.publicKey,
-				tokenProgram: TOKEN_PROGRAM_ID,
-			},
-			signers: [manager],
-		});
+		// const targetIx = program.instruction.processTask({
+		// 	accounts: {
+		// 		accountAta: getAta().degenAcctAta,
+		// 		associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+		// 		degenAccount: getPda().degenAcctKey,
+		// 		recipientAta: getAta().degenAta,
+		// 		systemProgram: SystemProgram.programId,
+		// 		task: taskkey,
+		// 		thread: threadAddress,
+		// 		threadAuthority: manager.publicKey,
+		// 		tokenProgram: TOKEN_PROGRAM_ID,
+		// 		rent: SYSVAR_RENT_PUBKEY,
+		// 	},
+		// 	remainingAccounts: [
+		// 		{
+		// 			pubkey: signer,
+		// 			isSigner: true,
+		// 			isWritable: false,
+		// 		},
+		// 	],
+		// });
 
 		const trigger = {
 			cron: {
-				schedule: "*/1 * * * *",
+				schedule: "*/10 * * * * * *",
 				skippable: true,
 			},
 		};
 
 		const threadProgram = getThreadProgram(provider)
-		
-    const createThreadIx = createThread(
-			{
-				instruction: targetIx,
-				trigger: trigger,
-				threadName: threadLabel,
-				threadAuthority: threadAuthority,
-			},
-			provider
-		);
 
-		const tx = await createThreadIx;
-    console.log("tx:", tx);
+    // const tx = await threadProgram.rpc.threadCreate(
+		// 	threadLabel,
+		// 	{
+		// 		programId: program.programId,
+		// 		accounts: targetIx.keys,
+		// 		data: targetIx.data,
+		// 	},
+		// 	trigger,
+		// 	{
+		// 		accounts: {
+		// 			authority: manager.publicKey,
+		// 			payer: manager.publicKey,
+		// 			thread: threadAddress,
+		// 			systemProgram: SystemProgram.programId,
+		// 		},
+    //     options: {
+    //       skipPreflight: false
+    //     }
+		// 	}
+		// );
+
+    // console.log("tx:", tx);
+    
+    const threadAccount = await threadProgram.account.thread.fetch(threadAddress)
+    console.log("thread account:", threadAccount.kickoffInstruction.accounts);
     
 
-    // const tx2 = await threadProgram.rpc.threadDelete({
-		// 	accounts: {
-		// 		authority: threadAuthority,
-		// 		closeTo: threadAuthority,
-		// 		thread: threadAddress,
-		// 	},
-		// });
+    const tx2 = await threadProgram.rpc.threadDelete({
+			accounts: {
+				authority: threadAuthority,
+				closeTo: threadAuthority,
+				thread: threadAddress,
+			},
+		});
 
-    // console.log("tx2:", tx2);
+    console.log("tx2:", tx2);
     
 
 	})
+
 });
 

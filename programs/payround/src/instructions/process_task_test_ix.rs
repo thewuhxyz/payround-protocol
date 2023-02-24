@@ -3,7 +3,7 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Token, TokenAccount, Transfer},
 };
-use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
+// use clockwork_sdk::state::{ Thread, ThreadAccount };
 
 use crate::{
     constants::DEGEN_SEED,
@@ -11,11 +11,13 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct ProcessTask<'info> {
+pub struct ProcessTaskTest<'info> {
     pub task: Account<'info, Task>,
 
-    #[account(signer, address = thread.pubkey())]
-    pub thread: Account<'info, Thread>,
+    pub thread_authority: Signer<'info>,
+
+    // #[account(signer, address = thread.pubkey())]
+    // pub thread: Account<'info, Thread>,
 
     pub degen_account: Account<'info, DegenAccount>,
 
@@ -34,7 +36,7 @@ pub struct ProcessTask<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> ProcessTask<'info> {
+impl<'info> ProcessTaskTest<'info> {
     fn into_process_task_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
             from: self.account_ata.to_account_info().clone(),
@@ -46,7 +48,7 @@ impl<'info> ProcessTask<'info> {
     }
 }
 
-pub fn handler(ctx: Context<ProcessTask>) -> Result<ThreadResponse> {
+pub fn handler(ctx: Context<ProcessTaskTest>) -> Result<()> {
     let (_, bump) = Pubkey::find_program_address(
         &[ctx.accounts.degen_account.authority.key().as_ref(), DEGEN_SEED],
         ctx.program_id,
@@ -59,5 +61,5 @@ pub fn handler(ctx: Context<ProcessTask>) -> Result<ThreadResponse> {
         ]]),
         ctx.accounts.task.amount,
     )?;
-    Ok(ThreadResponse::default())
+    Ok(())
 }
