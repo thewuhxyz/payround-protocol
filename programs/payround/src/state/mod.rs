@@ -1,26 +1,34 @@
 use anchor_lang::prelude::*;
 
-#[account]
-pub struct EmailAccount {
-    pub usdc_token_account: Pubkey,
-    pub authority: Pubkey,
-    pub pubkey: Pubkey,
-    pub user_id: String,
-}
+use crate::constants::SEED_THREAD;
 
 #[account]
-pub struct DegenAccount {
-    pub usdc_token_account: Pubkey,
-    pub authority: Pubkey,
-    pub pubkey: Pubkey,
-    // pub account_type: AccountType
-    pub email: bool,
-    pub bump: u8
+pub struct PayroundAccount {
+  pub pubkey: Pubkey,
+  pub authority: Pubkey,
+  pub user_id: Pubkey,
+  pub usdc_token_account: Pubkey,
+  pub email: bool,
+  pub bump: u8,
 }
 
-pub enum AccountType {
-  DEGEN = 0,
-  EMAIL = 1,
+// #[account]
+// pub struct TaskSchedule {
+//   pub pubkey: Pubkey,
+//   pub account: Pubkey,
+//   pub authority: Pubkey,
+//   pub schedule_list: Pubkey,
+// }
+
+impl PayroundAccount {
+  pub fn init (&mut self, pubkey: Pubkey, authority: Pubkey, user_id: Pubkey, usdc_token_key: Pubkey, bump: u8, email: bool) {
+    self.pubkey = pubkey;
+    self. authority = authority;
+    self.user_id = user_id;
+    self.usdc_token_account = usdc_token_key;
+    self.bump = bump;
+    self.email = email
+  }
 }
 
 #[account]
@@ -30,12 +38,12 @@ pub struct Task {
     pub account: Pubkey, // email or degen
     pub authority: Pubkey,
     pub recipient: Pubkey,
+    pub thread: Pubkey,
+    // pub status: TaskStatus,
+    pub bump: u8,
     pub amount: u64,
+    pub label: String,
     pub desc: String,
-    // pub frequency: String, // the frequency of the task
-    // pub start: String, // when the task is to start
-    // pub stop: String, // when the task is to stop
-    // pub desc: String, // description of the task
 }
 
 impl Task {
@@ -47,6 +55,7 @@ impl Task {
         account: Pubkey,
         authority: Pubkey,
         recipient_ata: Pubkey,
+        label: String,
         desc: String,
     ) {
         self.amount = ammount;
@@ -56,7 +65,28 @@ impl Task {
         self.recipient = recipient_ata;
         self.account = account;
         self.desc = desc;
+        (self.thread, self.bump) = Pubkey::find_program_address(
+        &[SEED_THREAD, pubkey.as_ref(), label.as_ref()],
+        &clockwork_sdk::ID,
+    );
+
     }
+
+    pub fn update_amount (&mut self, amount: u64) {
+      self.amount = amount
+    }
+
+    pub fn update_group (&mut self, current_group_key: Pubkey, new_group_key: Pubkey) {
+      if self.task_group == current_group_key {
+        self.task_group = new_group_key
+      }
+    }
+}
+
+pub enum TaskStatus {
+  STARTED = 0,
+  PAUSED = 1,
+  ENDED = 2
 }
 
 #[account]
@@ -81,20 +111,42 @@ impl TaskGroup {
 #[account(zero_copy)]
 pub struct Tasklist {
     pub task_group: Pubkey,
-    pub count: u32,
-    pub max: u32,
-    pub list: [Pubkey; 100],
+    pub last_task: Pubkey,
+    pub count: u16,
+    pub max: u16,
+    pub list: [Pubkey; 1000],  //todo: change to vec!
 }
+
 
 impl Tasklist {
   pub fn init (&mut self, task_group_key: Pubkey) {
     self.task_group = task_group_key;
     self.count = 0;
-    self.list = [Pubkey::default(); 100]
+    self.list = [Pubkey::default(); 1000]
   }
 
   pub fn add_task (&mut self, task: Pubkey) {
     self.list[self.count as usize] = task;
     self.count = self.count + 1
   }
+
+  pub fn remove_task (&mut self, task: Pubkey) {
+    let new_count = self.count -1;
+    let index = self.list
+        .iter()
+        .position(|&x| x == task)
+        .unwrap();
+    self.list[index] = self.list[new_count as usize];
+    self.count = new_count;
+  }
+}
+
+#[account(zero_copy)]
+pub struct Tasklist2 {
+    pub pubkey: Pubkey,
+    pub owner_key: Pubkey,
+    pub schedule_list: bool,
+    pub count: u16,
+    pub max: u16,
+    pub list: [Pubkey; 1000],  //todo: change to vec!
 }

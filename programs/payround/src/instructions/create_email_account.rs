@@ -2,35 +2,36 @@ use anchor_lang::{prelude::*};
 use anchor_spl::token::{TokenAccount, Mint, Token};
 use anchor_spl::associated_token::AssociatedToken;
 
-use crate::state::EmailAccount;
+use crate::state::PayroundAccount;
 use crate::constants::*;
 
 #[derive(Accounts)]
-#[instruction(user_id: String)]
 pub struct CreateEmailAccount <'info> {  
   #[account(
     init,
-    seeds=[user_id.as_ref(), EMAIL_SEED.as_ref()],
+    seeds=[user_id.key().as_ref(), PAYROUND_SEED.as_ref()],
     bump,
-    payer=payer, 
+    payer=admin, 
     space=512+8
   )]
-  pub email_account: Account<'info, EmailAccount>,
+  pub email_account: Account<'info, PayroundAccount>,
   
+  // hardcode static signer
   #[account(mut)]
-  pub payer: Signer<'info>,
+  pub admin: Signer<'info>, 
+
+  pub user_id: SystemAccount<'info>,
+
 
   #[account(
     init,
-    payer=payer,
+    payer=admin,
     associated_token::mint=token_mint,
     associated_token::authority = email_account,
   )]
   pub usdc_token_account: Account<'info, TokenAccount>,
   
   pub token_mint: Account<'info, Mint>,
-
-  pub authority: Signer<'info>,
 
   pub token_program: Program<'info, Token>,
 
@@ -40,11 +41,17 @@ pub struct CreateEmailAccount <'info> {
 
 }
 
-pub fn handler (ctx: Context<CreateEmailAccount>, user_id: String) -> Result<()> {
-  ctx.accounts.email_account.authority = ctx.accounts.authority.key();
-  ctx.accounts.email_account.usdc_token_account = ctx.accounts.usdc_token_account.key();
-  ctx.accounts.email_account.user_id = user_id;
-  ctx.accounts.email_account.pubkey = ctx.accounts.email_account.key();
+pub fn handler (ctx: Context<CreateEmailAccount>, bump: u8) -> Result<()> {
+
+  let account_key = ctx.accounts.email_account.key();
+  ctx.accounts.email_account.init(
+    account_key,
+    ctx.accounts.admin.key(),
+    ctx.accounts.user_id.key(),
+    ctx.accounts.usdc_token_account.key(),
+    bump,
+    true
+  );
   Ok(())
 }
 

@@ -6,8 +6,8 @@ use anchor_spl::{
 // use clockwork_sdk::state::{ Thread, ThreadAccount };
 
 use crate::{
-    constants::DEGEN_SEED,
-    state::{DegenAccount, Task},
+    constants::PAYROUND_SEED,
+    state::{PayroundAccount, Task},
 };
 
 #[derive(Accounts)]
@@ -18,8 +18,7 @@ pub struct ProcessTaskTest<'info> {
 
     // #[account(signer, address = thread.pubkey())]
     // pub thread: Account<'info, Thread>,
-
-    pub degen_account: Account<'info, DegenAccount>,
+    pub payround_account: Account<'info, PayroundAccount>,
 
     #[account(mut)]
     pub account_ata: Account<'info, TokenAccount>,
@@ -41,7 +40,7 @@ impl<'info> ProcessTaskTest<'info> {
         let cpi_accounts = Transfer {
             from: self.account_ata.to_account_info().clone(),
             to: self.recipient_ata.to_account_info().clone(),
-            authority: self.degen_account.to_account_info().clone(),
+            authority: self.payround_account.to_account_info().clone(),
         };
         let cpi_program = self.token_program.to_account_info();
         CpiContext::new(cpi_program, cpi_accounts)
@@ -50,13 +49,16 @@ impl<'info> ProcessTaskTest<'info> {
 
 pub fn handler(ctx: Context<ProcessTaskTest>) -> Result<()> {
     let (_, bump) = Pubkey::find_program_address(
-        &[ctx.accounts.degen_account.authority.key().as_ref(), DEGEN_SEED],
+        &[
+            ctx.accounts.payround_account.authority.key().as_ref(),
+            PAYROUND_SEED,
+        ],
         ctx.program_id,
     );
     token::transfer(
         ctx.accounts.into_process_task_context().with_signer(&[&[
-            ctx.accounts.degen_account.authority.key().as_ref(),
-            DEGEN_SEED.as_ref(),
+            ctx.accounts.payround_account.authority.key().as_ref(),
+            PAYROUND_SEED.as_ref(),
             &[bump],
         ]]),
         ctx.accounts.task.amount,

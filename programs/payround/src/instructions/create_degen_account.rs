@@ -1,8 +1,8 @@
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{TokenAccount, Mint, Token};
 use anchor_spl::associated_token::AssociatedToken;
 
-use crate::state::{DegenAccount};
+use crate::state::PayroundAccount;
 use crate::constants::*;
 
 #[derive(Accounts)]
@@ -10,12 +10,12 @@ use crate::constants::*;
 pub struct CreateDegenAccount <'info> {  
   #[account(
     init,
-    seeds=[authority.key().as_ref(), DEGEN_SEED.as_ref()],
+    seeds=[authority.key().as_ref(), PAYROUND_SEED.as_ref()],
     bump,
     payer=payer, 
     space=512+8
   )]
-  pub degen_account: Account<'info, DegenAccount>,
+  pub payround_account: Account<'info, PayroundAccount>,
 
   #[account(mut)]
   pub payer: Signer<'info>,
@@ -24,7 +24,7 @@ pub struct CreateDegenAccount <'info> {
     init,
     payer=payer,
     associated_token::mint=token_mint,
-    associated_token::authority = degen_account,
+    associated_token::authority = payround_account,
   )]
   pub usdc_token_account: Account<'info, TokenAccount>,
   
@@ -40,10 +40,18 @@ pub struct CreateDegenAccount <'info> {
 
 }
 
-pub fn handler (ctx: Context<CreateDegenAccount>) -> Result<()> {
-  ctx.accounts.degen_account.authority = ctx.accounts.authority.key();
-  ctx.accounts.degen_account.usdc_token_account = ctx.accounts.usdc_token_account.key();
-  ctx.accounts.degen_account.pubkey = ctx.accounts.degen_account.key();
+pub fn handler (ctx: Context<CreateDegenAccount>, bump: u8) -> Result<()> {
+
+  let account_key = ctx.accounts.payround_account.key();
+
+  ctx.accounts.payround_account.init(
+    account_key,
+    ctx.accounts.authority.key(),
+    ctx.accounts.authority.key(),
+    ctx.accounts.usdc_token_account.key(),
+    bump,
+    false
+  );
   Ok(())
 }
 
