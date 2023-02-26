@@ -29,7 +29,7 @@ impl<'info> CreditTask<'info> {
     fn into_credit_task_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         let cpi_accounts = Transfer {
             from: self.payer.to_account_info(),
-            to: self.task.to_account_info(),
+            to: self.thread.to_account_info(),
         };
         let cpi_program = self.system_program.to_account_info();
 

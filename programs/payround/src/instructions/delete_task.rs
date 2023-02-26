@@ -19,7 +19,7 @@ pub struct DeleteTask<'info> {
       close=pay_to,
       has_one=authority
     )]
-    pub task: Account<'info, Task>,
+    pub task:Box< Account<'info, Task>>,
 
     pub task_group: Account<'info, TaskGroup>,
 
@@ -33,10 +33,10 @@ pub struct DeleteTask<'info> {
     /// Address to assign to the newly created Thread
     // #[account(mut, address = Thread::pubkey(payround_account.key(), task.key()))]
     #[account(mut)]
-    pub thread: Account<'info, Thread>,
+    pub thread: Box<Account<'info, Thread>>,
 
     /// Thread Admin, not signer but it will be use to pseudo-sign by the driver program
-    pub payround_account: Account<'info, PayroundAccount>, // * will be the thread authority
+    pub payround_account: Box<Account<'info, PayroundAccount>>, // * will be the thread authority
 }
 
 impl<'info> DeleteTask<'info> {

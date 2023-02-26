@@ -3,7 +3,7 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Token, TokenAccount, Transfer},
 };
-use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
+use clockwork_sdk::{state::{Thread, ThreadAccount, ThreadResponse}, ThreadProgram};
 
 use crate::{
     constants::PAYROUND_SEED,
@@ -13,9 +13,6 @@ use crate::{
 #[derive(Accounts)]
 pub struct ProcessTask<'info> {
     pub task: Account<'info, Task>,
-
-    #[account(signer, address = thread.pubkey())]
-    pub thread: Box<Account<'info, Thread>>,
 
     pub payround_account: Box<Account<'info, PayroundAccount>>,
 
@@ -32,9 +29,15 @@ pub struct ProcessTask<'info> {
 
     pub rent: Sysvar<'info, Rent>,
 
+    #[account(address = clockwork_sdk::ID)]
+    pub clockwork_program: Program<'info, ThreadProgram>,
+
     pub associated_token_program: Program<'info, AssociatedToken>,
 
     pub system_program: Program<'info, System>,
+
+    #[account(signer, address = thread.pubkey())]
+    pub thread: Box<Account<'info, Thread>>,
 }
 
 impl<'info> ProcessTask<'info> {
@@ -51,17 +54,16 @@ impl<'info> ProcessTask<'info> {
 
 pub fn handler(ctx: Context<ProcessTask>) -> Result<ThreadResponse> {
 
-
     let (_, bump) = Pubkey::find_program_address(
         &[
-            ctx.accounts.payround_account.authority.key().as_ref(),
+            ctx.accounts.payround_account.user_id.key().as_ref(),
             PAYROUND_SEED,
         ],
         ctx.program_id,
     );
     token::transfer(
         ctx.accounts.into_process_task_context().with_signer(&[&[
-            ctx.accounts.payround_account.authority.key().as_ref(),
+            ctx.accounts.payround_account.user_id.key().as_ref(),
             PAYROUND_SEED.as_ref(),
             &[bump],
         ]]),

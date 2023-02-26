@@ -13,6 +13,7 @@ pub struct CreateTaskGroup<'info> {
 
     pub authority: Signer<'info>,
 
+    #[account(mut)]
     pub payround_account: Account<'info, PayroundAccount>,
 
     #[account(zero)]
@@ -38,6 +39,8 @@ pub fn handler(ctx: Context<CreateTaskGroup>, desc: String) -> Result<()> {
 
     let mut tasklist = ctx.accounts.tasklist.load_init()?;
     tasklist.init(task_group_key);
+
+    ctx.accounts.payround_account.add_group(task_group_key);
 
     Ok(())
 }

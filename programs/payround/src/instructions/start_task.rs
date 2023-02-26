@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Token, TokenAccount};
-use clockwork_sdk::state::{Thread, Trigger};
+use clockwork_sdk::state::Trigger;
 use clockwork_sdk::ThreadProgram;
 use solana_program::instruction::Instruction;
 
@@ -27,8 +27,8 @@ pub struct StartTask<'info> {
 
     /// Address to assign to the newly created Thread
     // #[account(mut, address = Thread::pubkey(payround_account.key(), task.key()))]
-    #[account(mut)]
-    pub thread: Box<Account<'info, Thread>>,
+    // #[account(mut)]
+    pub thread: SystemAccount<'info>,
 
     /// Thread Admin, not signer but it will be use to pseudo-sign by the driver program
     pub payround_account: Box<Account<'info, PayroundAccount>>, // * will be the thread authority
@@ -76,20 +76,27 @@ pub fn handler(ctx: Context<StartTask>, schedule: String, skippable: bool) -> Re
         system_program: ctx.accounts.system_program.key(),
         task: ctx.accounts.task.key(),
         token_program: ctx.accounts.token_program.key(),
+        clockwork_program: ctx.accounts.clockwork_program.key(),
         thread: ctx.accounts.thread.key(),
     }
     .to_account_metas(Some(false));
 
     let signer_thread = ctx.accounts.thread.to_account_metas(Some(true))[0].clone();
 
-    target_ix_acct.pop();
+    let index = target_ix_acct.iter().position(|x| x.pubkey == signer_thread.pubkey).unwrap();
+    target_ix_acct.remove(index);
     target_ix_acct.push(signer_thread);
+
+    msg!("{:#?}", target_ix_acct);
 
     let target_ix = Instruction {
         program_id: crate::ID,
         accounts: target_ix_acct,
-        data: crate::instruction::ProcessTask {}.data(),
+        data: crate::instruction::ProcessTask{}.data(),
+        // data: clockwork_sdk::utils::anchor_sighash("process_task").into()
     };
+
+    // msg!("{:#?}", target_ix);
 
     let trigger = Trigger::Cron {
         schedule,
@@ -98,7 +105,7 @@ pub fn handler(ctx: Context<StartTask>, schedule: String, skippable: bool) -> Re
 
     clockwork_sdk::cpi::thread_create(
         ctx.accounts.into_start_task_context().with_signer(&[&[
-            ctx.accounts.payround_account.authority.key().as_ref(),
+            ctx.accounts.payround_account.user_id.key().as_ref(),
             PAYROUND_SEED.as_ref(),
             &[ctx.accounts.payround_account.bump],
         ]]),

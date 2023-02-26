@@ -14,12 +14,12 @@ pub mod payround {
 
     use super::*;
 
-    pub fn create_email_account (ctx: Context<CreateEmailAccount>, bump: u8) -> Result<()> {
-        instructions::create_email_account::handler(ctx, bump)   
+    pub fn create_email_account (ctx: Context<CreateEmailAccount>, bump: u8, desc: String) -> Result<()> {
+        instructions::create_email_account::handler(ctx, bump, desc)   
     }
     
-    pub fn create_degen_account ( ctx: Context<CreateDegenAccount>, bump: u8) -> Result<()> {
-        instructions::create_degen_account::handler(ctx, bump)
+    pub fn create_degen_account ( ctx: Context<CreateDegenAccount>, bump: u8, desc: String) -> Result<()> {
+        instructions::create_degen_account::handler(ctx, bump, desc)
     }
     
     pub fn close_payround_account ( ctx: Context<ClosePayroundAccount>) -> Result<()> {
