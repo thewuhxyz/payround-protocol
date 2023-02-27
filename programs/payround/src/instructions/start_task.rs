@@ -26,8 +26,8 @@ pub struct StartTask<'info> {
     pub payer: Signer<'info>,
 
     /// Address to assign to the newly created Thread
-    // #[account(mut, address = Thread::pubkey(payround_account.key(), task.key()))]
-    // #[account(mut)]
+    // #[account(mut, address = Thread::pubkey(payround_account.key()]
+    #[account(mut)]
     pub thread: SystemAccount<'info>,
 
     /// Thread Admin, not signer but it will be use to pseudo-sign by the driver program
@@ -87,13 +87,12 @@ pub fn handler(ctx: Context<StartTask>, schedule: String, skippable: bool) -> Re
     target_ix_acct.remove(index);
     target_ix_acct.push(signer_thread);
 
-    msg!("{:#?}", target_ix_acct);
+    // msg!("{:#?}", target_ix_acct);
 
     let target_ix = Instruction {
         program_id: crate::ID,
         accounts: target_ix_acct,
         data: crate::instruction::ProcessTask{}.data(),
-        // data: clockwork_sdk::utils::anchor_sighash("process_task").into()
     };
 
     // msg!("{:#?}", target_ix);

@@ -36,7 +36,7 @@ pub struct ProcessTask<'info> {
 
     pub system_program: Program<'info, System>,
 
-    #[account(signer, address = thread.pubkey())]
+    #[account(mut, signer, address = thread.pubkey())]
     pub thread: Box<Account<'info, Thread>>,
 }
 

@@ -16,7 +16,7 @@ describe("payround", () => {
 		console.log("id", id.publicKey);
 		
 
-		const degenAccount = new PayroundAccount(manager, usdcMint, id.publicKey)
+		const degenAccount = new PayroundAccount(degen, usdcMint, id.publicKey)
 
 		
 		it("loads degen", async () => {
@@ -373,7 +373,7 @@ describe("payround", () => {
 		
 		// await sleep(25000);
 
-		const tx4 = await program.rpc.startTask("*/10 * * * * * *", true, {
+		const tx4 = await program.rpc.startTask("*/10 * * * * * *", false, {
 			accounts: {
 				accountAta: degenAccount.usdcAddress,
 				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -390,9 +390,9 @@ describe("payround", () => {
 				tokenProgram: TOKEN_PROGRAM_ID,
 			},
 			signers: [degenAccount.owner],
-			options:{
-				skipPreflight: true,	
-			}
+			options: {
+				skipPreflight: true,
+			},
 		});
 
 		console.log("tx4:", tx4);
