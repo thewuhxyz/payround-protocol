@@ -4,30 +4,31 @@ import { Payround } from "../target/types/payround";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import fs from "fs";
 import {
+	Account,
 	createMint,
 	getAccount,
 	getAssociatedTokenAddress,
 	getAssociatedTokenAddressSync,
 	getOrCreateAssociatedTokenAccount,
 	mintToChecked,
-  transfer,
-  transferChecked,
+	transfer,
+	transferChecked,
 } from "@solana/spl-token";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
-import Manager from "./keypair/manager"
-import Degen from "./keypair/degen"
+import Manager from "./keypair/manager";
+import key2 from "./keypair/degen";
 
-const degenpair = Uint8Array.from(Degen);
+const degenpair = Uint8Array.from(key2);
 const managerpair = Uint8Array.from(Manager);
 
-const usdcMint = new PublicKey("9Q2fjLy6UpyW2NjFsvptZE1ADFAEzxSVTLyk7wEH8Zo8");
+const usdcMint = new PublicKey("48JBvpStoDYJmQBFuENcCm6dBomPC2z9r4SfJJa9ui9H");
 
 const degen = Keypair.fromSecretKey(degenpair);
 const manager = Keypair.fromSecretKey(managerpair);
 
 export const keys = { manager, degen, usdcMint };
 
-export const connection = new Connection("https://api.devnet.solana.com/");
+export const connection = new Connection("https://api.devnet.solana.com/", {commitment: "singleGossip", });
 export const provider = new anchor.AnchorProvider(
 	connection,
 	new anchor.Wallet(manager),
@@ -35,15 +36,22 @@ export const provider = new anchor.AnchorProvider(
 );
 anchor.setProvider(provider);
 
-
 export const program = anchor.workspace.Payround as Program<Payround>;
 
-export const fetchEmailAccount = async (key: PublicKey) => {
-	return await program.account.emailAccount.fetch(key);
+export const fetchPayroundAccount = async (key: PublicKey) => {
+	return await program.account.payroundAccount.fetch(key);
 };
 
-export const fetchDegenAccount = async (key: PublicKey) => {
-	return await program.account.degenAccount.fetch(key);
+export const fetchTaskAccount = async (key: PublicKey) => {
+	return await program.account.task.fetch(key);
+};
+
+export const fetchTaskGroupAccount = async (key: PublicKey) => {
+	return await program.account.taskGroup.fetch(key);
+};
+
+export const fetchTaskListAccount = async (key: PublicKey) => {
+	return await program.account.tasklist.fetch(key);
 };
 
 export const fetchTokenAccount = async (address: PublicKey) => {
@@ -60,22 +68,7 @@ export const createUsdcMint = async () => {
 	);
 };
 
-export const getAta = (mint: PublicKey = usdcMint, user_id: string = "1") => {
-	const managerAta = getAssociatedTokenAddressSync(mint, manager.publicKey);
-	const degenAta = getAssociatedTokenAddressSync(mint, degen.publicKey);
-
-	const { emailKey, degenAcctKey } = getPda(user_id);
-
-	const emailAta = getAssociatedTokenAddressSync(mint, emailKey, true);
-	const degenAcctAta = getAssociatedTokenAddressSync(mint, degenAcctKey, true);
-
-	return {
-		managerAta,
-		degenAta,
-		emailAta,
-		degenAcctAta,
-	};
-};
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const usdcMinter = async (mint: PublicKey = usdcMint) => {
 	try {
@@ -120,34 +113,185 @@ export const usdcMinter = async (mint: PublicKey = usdcMint) => {
 	}
 };
 
-
-
-export const usdcTransfer = async (to: "managerAta" | "degenAta" | "emailAta" | "degenAcctAta", uiAmount: number, mint: PublicKey = usdcMint) => {
-  return await transfer (
-    connection,
-    manager,
-    getAta(mint).managerAta,
-    getAta(mint)[to],
-    manager,
-    uiAmount * 10**6
-  )
-}
+// export const usdcTransfer = async (
+// 	to: "managerAta" | "degenAta" | "emailAta" | "degenAcctAta",
+// 	uiAmount: number,
+// 	mint: PublicKey = usdcMint
+// ) => {
+// 	return await transfer(
+// 		connection,
+// 		manager,
+// 		getAta(mint).managerAta,
+// 		getAta(mint)[to],
+// 		manager,
+// 		uiAmount * 10 ** 6
+// 	);
+// };
 
 // export const vaultName = Keypair.generate().publicKey.toString().slice(0, 7);
 
-export const getPda = (userId: string = "1") => {
-	let [emailKey] = findProgramAddressSync(
-		[Buffer.from(userId), Buffer.from("email")],
+export const getPda = (userId: PublicKey) => {
+	return findProgramAddressSync(
+		[userId.toBuffer(), Buffer.from("payround")],
 		program.programId
 	);
-
-	let [degenAcctKey] = findProgramAddressSync(
-		[degen.publicKey.toBuffer(), Buffer.from("degen")],
-		program.programId
-	);
-
-	return {
-		emailKey,
-		degenAcctKey,
-	};
 };
+
+class UsdcManager {
+	static decimals: number = 6;
+	static authority: Keypair = manager;
+	// static mint: PublicKey | null = null;
+
+	owner: Keypair;
+	mint: PublicKey;
+
+	constructor(mint: PublicKey, owner: Keypair) {
+		this.owner = owner;
+		this.mint = mint
+	}
+
+	// static async load() {
+	// 	if (!this.mint) this.mint = await this.createusdcMint();
+	// 	console.log("mint:", this.mint.toBase58());
+		
+	// 	return this.mint;
+	// }
+
+	static async createusdcMint() {
+		return await createMint(
+			connection,
+			this.authority,
+			this.authority.publicKey,
+			this.authority.publicKey,
+			this.decimals
+		);
+	}
+
+	static getUsdcAddress(mint: PublicKey, owner: PublicKey, allowPda?: boolean) {
+		return getAssociatedTokenAddressSync(mint, owner, allowPda);
+	}
+
+	static async getUsdcAccount(address: PublicKey) {
+		return await getAccount(connection, address);
+	}
+
+	static async getUsdcBalance(address: PublicKey) {
+		const account = await this.getUsdcAccount(address);
+		return Number(account.amount)/10**6;
+	}
+
+	private static async _airdrop(
+		mint: PublicKey,
+		owner: Keypair,
+		ownerUsdcAddress: PublicKey,
+		uiAmount: number
+	) {
+		return await mintToChecked(
+			connection,
+			owner,
+			mint,
+			ownerUsdcAddress,
+			this.authority,
+			uiAmount * 10**this.decimals,
+			this.decimals
+		);
+	}
+
+	get usdcAddress() {
+		return UsdcManager.getUsdcAddress(this.mint, this.owner.publicKey);
+	}
+
+	async createAccount() {
+		return await getOrCreateAssociatedTokenAccount(
+			connection,
+			UsdcManager.authority,
+			this.mint,
+			this.owner.publicKey,
+		);
+	}
+	async fetchUsdcBalance() {
+		return await UsdcManager.getUsdcBalance(this.usdcAddress)
+	}
+
+	async airdrop(uiAmount: number) {
+		return await UsdcManager._airdrop(this.mint, this.owner, this.usdcAddress, uiAmount);
+	}
+
+	async transferUsdc(to: PublicKey, uiAmount: number) {
+		return await transfer(
+			connection,
+			this.owner,
+			this.usdcAddress,
+			to,
+			this.owner,
+			uiAmount * 10 ** UsdcManager.decimals
+		);
+	}
+}
+
+
+
+
+export class PayroundAccount {
+	owner: Keypair;
+	usdcManager: UsdcManager;
+	id: PublicKey
+	// email: boolean
+	mint: PublicKey;
+
+	constructor(keypair: Keypair, mint: PublicKey, id?: PublicKey) {
+		this.owner = keypair;
+		this.mint = mint;
+		this.id = id ? id : this.owner.publicKey
+		// this.email = id ? true : false
+		this.usdcManager = new UsdcManager(this.mint, this.owner);
+	}
+
+	async load() {
+		// await UsdcManager.load();
+		await this.usdcManager.createAccount()
+	}
+
+	get pubkey() {
+		return findProgramAddressSync(
+			[this.id.toBuffer(), Buffer.from("payround")],
+			program.programId
+		)[0];
+	}
+
+	get bump() {
+		return findProgramAddressSync(
+			[this.id.toBuffer(), Buffer.from("payround")],
+			program.programId
+		)[1];
+	}
+
+	async transferUsdcToSelf (amount: number) {
+		return await this.usdcManager.transferUsdc(this.usdcAddress, amount)
+	}
+
+	get usdcAddress() {
+		return UsdcManager.getUsdcAddress(this.mint, this.pubkey, true);
+	}
+
+	async getBalance() {
+		return await UsdcManager.getUsdcBalance(this.usdcAddress);
+	}
+
+	fetchPayroundAccount = async () => {
+		return await program.account.payroundAccount.fetch(this.pubkey);
+	};
+
+	fetchTaskAccount = async (key: PublicKey) => {
+		return await program.account.task.fetch(key);
+	};
+
+	fetchTaskGroupAccount = async (key: PublicKey) => {
+		return await program.account.taskGroup.fetch(key);
+	};
+
+	fetchTaskListAccount = async (key: PublicKey) => {
+		return await program.account.tasklist.fetch(key);
+	};
+}
+

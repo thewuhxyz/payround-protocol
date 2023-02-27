@@ -1,6 +1,6 @@
-import { usdcMinter, usdcTransfer } from "./utils";
+// import { usdcMinter, usdcTransfer } from "./utils";
 
-describe("payround", () => {
+// describe("payround", () => {
 	// Configure the client to use the local cluster.
 
 
@@ -11,19 +11,19 @@ describe("payround", () => {
 
 	// })
 
-	it("should mint to manager and degen", async () => {
+// 	it("should mint to manager and degen", async () => {
 
-	  console.log("start");
+// 	  console.log("start");
 
-	  const result = await usdcMinter()
+// 	  const result = await usdcMinter()
 
-	  console.log("result:", result);
+// 	  console.log("result:", result);
 
-	})
+// 	})
 
-	it("transfers usdc from manager", async () => {
-	  const tx = await usdcTransfer("degenAta", 10)
-	  console.log("tx", tx);
-	})
+// 	it("transfers usdc from manager", async () => {
+// 	  const tx = await usdcTransfer("degenAta", 10)
+// 	  console.log("tx", tx);
+// 	})
 
-})
+// })

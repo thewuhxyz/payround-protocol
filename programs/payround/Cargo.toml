@@ -16,8 +16,9 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.26.0"
+anchor-lang = {version ="0.26.0", features=["init-if-needed"]}
 anchor-spl = "0.26.0"
 # solana-program = {version="1.14.14", workspace=true}
 solana-program = {version="1.14.14"}
+clockwork-sdk = { version = "1.4.2" }
 
