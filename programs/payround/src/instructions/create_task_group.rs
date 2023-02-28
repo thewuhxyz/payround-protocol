@@ -1,27 +1,34 @@
 use anchor_lang::prelude::*;
 
+use crate::constants::*;
 use crate::state::{PayroundAccount, TaskGroup, Tasklist};
 
 #[derive(Accounts)]
 pub struct CreateTaskGroup<'info> {
     #[account(
-    init,
-    payer=payer,
-    space=512+8
-  )]
+        init,
+        payer=authority,
+        space=8+TaskGroup::LEN
+    )]
     pub task_group: Account<'info, TaskGroup>,
 
+    #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut)]
-    pub payround_account: Account<'info, PayroundAccount>,
+    pub user_id: SystemAccount<'info>,
+
+    #[account(
+        seeds=[user_id.key().as_ref(), PAYROUND_SEED.as_ref()],
+        bump=payround_account.bump,
+        has_one=authority,
+        has_one=user_id
+    )]
+    pub payround_account: Box<Account<'info, PayroundAccount>>,
 
     #[account(zero)]
     pub tasklist: AccountLoader<'info, Tasklist>,
 
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
+    #[account(address = anchor_lang::system_program::ID)]
     pub system_program: Program<'info, System>,
 }
 
@@ -40,7 +47,7 @@ pub fn handler(ctx: Context<CreateTaskGroup>, desc: String) -> Result<()> {
     let mut tasklist = ctx.accounts.tasklist.load_init()?;
     tasklist.init(task_group_key);
 
-    ctx.accounts.payround_account.add_group(task_group_key);
+    ctx.accounts.payround_account.add_group(task_group_key)?;
 
     Ok(())
 }

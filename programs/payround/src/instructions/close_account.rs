@@ -8,14 +8,19 @@ use crate::state::PayroundAccount;
 pub struct ClosePayroundAccount<'info> {
     #[account(
     mut,
-    seeds=[payround_account.user_id.as_ref(), PAYROUND_SEED.as_ref()],
-    bump,
+    seeds=[user_id.key().as_ref(), PAYROUND_SEED.as_ref()],
+    bump=payround_account.bump,
+    has_one=user_id,
     has_one=authority,
     close=authority
   )]
     pub payround_account: Account<'info, PayroundAccount>,
 
+    pub user_id: SystemAccount<'info>,
+
     #[account(
+    mut,
+    close=authority,
     associated_token::mint=token_mint,
     associated_token::authority = payround_account,
     constraint=usdc_token_account.amount <= 0
@@ -27,8 +32,10 @@ pub struct ClosePayroundAccount<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
 
+    #[account(address = anchor_lang::system_program::ID)]
     pub system_program: Program<'info, System>,
 }
 

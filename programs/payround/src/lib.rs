@@ -1,16 +1,17 @@
 pub mod state;
 pub mod instructions;
 pub mod constants;
+pub mod error;
 
 use anchor_lang::prelude::*;
 use instructions::*;
+use state::*;
+use clockwork_sdk::state::ThreadResponse;
 
 declare_id!("BQpMmaGZ9wgYvUQGcBarTr3puuDid1W3tUj7Fz3pWUkV");
 
 #[program]
 pub mod payround {
-
-    use clockwork_sdk::state::ThreadResponse;
 
     use super::*;
 
@@ -26,8 +27,8 @@ pub mod payround {
         instructions::close_account::handler(ctx)
     }
 
-    pub fn create_task (ctx: Context<CreateTask>, amount: u64, label: String, desc: String) -> Result<()> {
-        instructions::create_task::handler(ctx, amount, label, desc)
+    pub fn create_task (ctx: Context<CreateTask>, amount: u64, desc: String, freq: String, skippable: bool) -> Result<()> {
+        instructions::create_task::handler(ctx, amount, desc, freq, skippable)
     }
 
     pub fn create_task_group (ctx: Context<CreateTaskGroup>, desc: String) -> Result<()> {
@@ -38,12 +39,8 @@ pub mod payround {
         instructions::process_task::handler(ctx)
     }
     
-    pub fn process_task_test_ix (ctx: Context<ProcessTaskTest>) -> Result<()> {
-        instructions::process_task_test_ix::handler(ctx)
-    }
-    
-    pub fn start_task (ctx: Context<StartTask>, schedule: String,  skippable: bool) -> Result<()> {
-        instructions::start_task::handler(ctx, schedule, skippable)
+    pub fn start_task (ctx: Context<StartTask>) -> Result<()> {
+        instructions::start_task::handler(ctx)
     }
     
     pub fn pause_task (ctx: Context<PauseTask>) -> Result<()> {
@@ -62,14 +59,10 @@ pub mod payround {
         instructions::delete_task::handler(ctx)
     }
     
-    pub fn update_task_schedule (ctx: Context<UpdateSchedule>, schedule: String, skippable: bool) -> Result<()> {
-        instructions::update_schedule::handler(ctx, schedule, skippable)
+    pub fn update_task_details (ctx: Context<UpdateTaskDetails>, task_options: TaskOptions) -> Result<()> {
+        instructions::update_task_details::handler(ctx, task_options)
     }
-    
-    pub fn update_task_amount (ctx: Context<UpdateTaskAmount>, amount: u64) -> Result<()> {
-        instructions::update_task::handler(ctx, amount)
-    }
-    
+
     pub fn withdraw_task_credit (ctx: Context<WithdrawCredit>, amount: u64) -> Result<()> {
         instructions::withdraw_credit::handler(ctx, amount)
     }
@@ -81,21 +74,6 @@ pub mod payround {
     pub fn change_task_group (ctx: Context<ChangeTaskGroup>) -> Result<()> {
         instructions::change_task_group::handler(ctx)
     }
-
-    /*
-    *start task
-    *pause task
-    *resume task
-    *end task
-    *delete task
-    *update task scheule
-    *update task
-    *withdraw credit
-    *credit task
-    *change task group
-     */
-
-
 
 }
 
