@@ -4,6 +4,7 @@ use anchor_spl::associated_token::AssociatedToken;
 
 use crate::state::{PayroundAccount, TaskGroup, Tasklist};
 use crate::constants::*;
+use crate::error::ErrorCode;
 
 #[derive(Accounts)]
 pub struct CreateEmailAccount <'info> {  
@@ -11,32 +12,29 @@ pub struct CreateEmailAccount <'info> {
     init,
     seeds=[user_id.key().as_ref(), PAYROUND_SEED.as_ref()],
     bump,
-    payer=payer, 
-    space=512+8
+    payer=authority, 
+    space=8+PayroundAccount::LEN
   )]
   pub email_account: Account<'info, PayroundAccount>,
   
-  // hardcode static signer
+  #[account(mut, address=ADMIN_SIGNER @ ErrorCode::NotAdmin)]
   pub authority: Signer<'info>, 
   
   pub user_id: SystemAccount<'info>,
 
   #[account(
     init,
-    payer=payer,
-    space=512+8
+    payer=authority,
+    space=8+TaskGroup::LEN
   )]
   pub default_group: Account<'info, TaskGroup>,
 
   #[account(zero)]
     pub tasklist: AccountLoader<'info, Tasklist>,
-  
-  #[account(mut)]
-  pub payer: Signer<'info>,
 
   #[account(
     init,
-    payer=payer,
+    payer=authority,
     associated_token::mint=token_mint,
     associated_token::authority = email_account,
   )]
@@ -44,10 +42,13 @@ pub struct CreateEmailAccount <'info> {
   
   pub token_mint: Account<'info, Mint>,
 
+  #[account(address = anchor_spl::token::ID)]
   pub token_program: Program<'info, Token>,
 
+    #[account(address = anchor_spl::associated_token::ID)]
   pub associated_token_program: Program<'info, AssociatedToken>,
   
+  #[account(address = anchor_lang::system_program::ID)]
   pub system_program: Program<'info, System>
 
 }
@@ -77,7 +78,7 @@ pub fn handler (ctx: Context<CreateEmailAccount>, bump: u8, desc: String) -> Res
     group_key,
     bump,
     true
-  );
+  )?;
 
   Ok(())
 }

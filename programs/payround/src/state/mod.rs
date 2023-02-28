@@ -1,28 +1,24 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::SEED_THREAD;
+use crate::constants::{SEED_THREAD, MAX_TASK, MAX_GROUP};
+use crate::error::ErrorCode;
 
 #[account]
 pub struct PayroundAccount {
-    pub pubkey: Pubkey,
-    pub authority: Pubkey,
-    pub user_id: Pubkey,
-    pub usdc_token_account: Pubkey,
-    pub task_groups: Vec<Pubkey>,
-    pub group_count: u8,
-    pub email: bool,
-    pub bump: u8,
+    pub pubkey: Pubkey, //32
+    pub authority: Pubkey, //32
+    pub user_id: Pubkey, // 32
+    pub usdc_token_account: Pubkey, // 32
+    pub max_group: u8, // 1
+    pub group_count: u8, // 1
+    pub email: bool, // 1
+    pub bump: u8, // 1
+    pub task_groups: Vec<Pubkey>, // 24 + 32*32
 }
 
-// #[account]
-// pub struct TaskSchedule {
-//   pub pubkey: Pubkey,
-//   pub account: Pubkey,
-//   pub authority: Pubkey,
-//   pub schedule_list: Pubkey,
-// }
-
 impl PayroundAccount {
+    pub const LEN:usize = 32 + 32 + 32 +32 + 1 + 1+ 1+ 1 + 24 + 32*32;
+
     pub fn init(
         &mut self,
         pubkey: Pubkey,
@@ -32,46 +28,69 @@ impl PayroundAccount {
         group_key: Pubkey,
         bump: u8,
         email: bool,
-    ) {
+    ) -> Result<()> {
         self.pubkey = pubkey;
         self.authority = authority;
         self.user_id = user_id;
         self.usdc_token_account = usdc_token_key;
         self.bump = bump;
         self.email = email;
-        self.task_groups = Vec::with_capacity(20);
+        self.task_groups = Vec::with_capacity(32);
+        self.max_group = MAX_GROUP as u8;
         self.group_count = 0;
-        self.add_group(group_key);
+        self.add_group(group_key)?;
+        Ok(())
     }
 
-    pub fn add_group(&mut self, group_key: Pubkey) {
+    pub fn add_group(&mut self, group_key: Pubkey) -> Result<()> {
+        if self.group_count >= self.max_group {
+            return err!(ErrorCode::MaxLimitReached)
+        }
         self.task_groups.push(group_key);
-        self.group_count = self.group_count + 1
+        self.group_count = self.group_count.checked_add(1).unwrap();
+        Ok(())
     }
 
-    pub fn remove_group(&mut self, group_key: Pubkey) {
+    pub fn remove_group(&mut self, group_key: Pubkey) -> Result<()> {
         let index = self.task_groups.iter().position(|&x| x == group_key).unwrap();
         self.task_groups.remove(index);
-        self.group_count = self.group_count - 1
+        self.group_count = self.group_count.checked_sub(1).unwrap();
+        Ok(())
     }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct Schedule {
+    pub freq: String,
+    pub skippable: bool
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct TaskOptions {
+    pub amount: Option<u64>,
+    pub schedule_options: Option<Schedule>
 }
 
 #[account]
 pub struct Task {
-    pub pubkey: Pubkey,
-    pub task_group: Pubkey,
-    pub account: Pubkey, // email or degen
-    pub authority: Pubkey,
-    pub recipient: Pubkey,
-    pub thread: Pubkey,
-    // pub status: TaskStatus,
-    pub bump: u8,
-    pub amount: u64,
-    pub label: String,
-    pub desc: String,
+    pub pubkey: Pubkey, // 32
+    pub task_group: Pubkey, // 32
+    pub account: Pubkey, // 32
+    pub authority: Pubkey, // 32
+    pub recipient: Pubkey, // 32
+    pub thread: Pubkey, // 32
+    pub bump: u8, // 1
+    pub amount: u64, // 8
+    pub skippable: bool, // 1
+    pub status: TaskStatus, // 1+1
+    pub label: String, // 4 + 32
+    pub desc: String, // 4 + 32
+    pub freq: String,  // 100
 }
 
 impl Task {
+    pub const LEN:usize = 32 + 32 + 32 +32 + 32 + 32 + 1 + 8 + 1+ (1+1) + (4*32) + (4*32) + 100 ;
+
     pub fn new(
         &mut self,
         ammount: u64,
@@ -80,8 +99,9 @@ impl Task {
         account: Pubkey,
         authority: Pubkey,
         recipient_ata: Pubkey,
-        label: String,
         desc: String,
+        freq: String,
+        skippable: bool
     ) {
         self.amount = ammount;
         self.pubkey = pubkey;
@@ -90,7 +110,12 @@ impl Task {
         self.recipient = recipient_ata;
         self.account = account;
         self.desc = desc;
-        self.label = label;
+        self.freq = freq;
+        self.skippable = skippable;
+        
+        let task_key_str = bs58::encode(self.pubkey).into_string();
+        self.label = task_key_str.split_at(10).0.to_string();
+        
         (self.thread, self.bump) = Pubkey::find_program_address(
             &[SEED_THREAD, account.as_ref(), self.label.as_ref()],
             &clockwork_sdk::ID,
@@ -106,24 +131,33 @@ impl Task {
             self.task_group = new_group_key
         }
     }
+
+    pub fn update_schedule(&mut self, freq: String, skippable: bool) {
+        self.freq = freq;
+        self.skippable = skippable;
+    }
 }
 
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TaskStatus {
-    STARTED = 0,
-    PAUSED = 1,
-    ENDED = 2,
+    NOTSTARTED = 0,
+    STARTED = 1,
+    PAUSED = 2,
+    ENDED = 3,
 }
 
 #[account]
 pub struct TaskGroup {
-    pub pubkey: Pubkey,
-    pub authority: Pubkey,
-    pub account: Pubkey,
-    pub desc: String,
-    pub tasklist: Pubkey,
+    pub pubkey: Pubkey, // 32
+    pub authority: Pubkey, //32
+    pub account: Pubkey, // 32
+    pub tasklist: Pubkey, // 32
+    pub desc: String, // 4 + 32
 }
 
 impl TaskGroup {
+
+    pub const LEN:usize = 32 + 32 + 32 +32 +( 4*32 );
     pub fn init(
         &mut self,
         pubkey: Pubkey,
@@ -143,7 +177,6 @@ impl TaskGroup {
 #[account(zero_copy)]
 pub struct Tasklist {
     pub task_group: Pubkey,
-    pub last_task: Pubkey,
     pub count: u16,
     pub max: u16,
     pub list: [Pubkey; 1000], //todo: change to vec!
@@ -153,28 +186,24 @@ impl Tasklist {
     pub fn init(&mut self, task_group_key: Pubkey) {
         self.task_group = task_group_key;
         self.count = 0;
+        self.max = MAX_TASK as u16;
         self.list = [Pubkey::default(); 1000]
     }
 
-    pub fn add_task(&mut self, task: Pubkey) {
+    pub fn add_task(&mut self, task: Pubkey) -> Result<()> {
+        if self.count >= self.max {
+            return err!(ErrorCode::MaxLimitReached)
+        }
         self.list[self.count as usize] = task;
-        self.count = self.count + 1
+        self.count = self.count.checked_add(1).unwrap();
+        Ok(())
     }
 
-    pub fn remove_task(&mut self, task: Pubkey) {
-        let new_count = self.count - 1;
+    pub fn remove_task(&mut self, task: Pubkey) -> Result<()> {
+        let new_count = self.count.checked_sub(1).unwrap();
         let index = self.list.iter().position(|&x| x == task).unwrap();
         self.list[index] = self.list[new_count as usize];
         self.count = new_count;
+        Ok(())
     }
 }
-
-// #[account(zero_copy)]
-// pub struct Tasklist2 {
-//     pub pubkey: Pubkey,
-//     pub owner_key: Pubkey,
-//     pub schedule_list: bool,
-//     pub count: u16,
-//     pub max: u16,
-//     pub list: [Pubkey; 1000], //todo: change to vec!
-// }

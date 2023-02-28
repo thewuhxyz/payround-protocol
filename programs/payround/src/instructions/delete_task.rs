@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
-use clockwork_sdk::state::Thread;
+use clockwork_sdk::state::{Thread, ThreadAccount};
 use clockwork_sdk::ThreadProgram;
 
 use crate::constants::PAYROUND_SEED;
+use crate::error::ErrorCode;
 use crate::state::{PayroundAccount, Task, TaskGroup, Tasklist};
 
 #[derive(Accounts)]
@@ -12,31 +13,44 @@ pub struct DeleteTask<'info> {
     #[account(address = clockwork_sdk::ID)]
     pub clockwork_program: Program<'info, ThreadProgram>,
 
+    #[account(mut)]
     pub authority: Signer<'info>,
 
     #[account(
       mut,
-      close=pay_to,
-      has_one=authority
+      close=authority,
+      has_one=authority,
+      has_one=task_group,
+      has_one=thread,
+      constraint=task.account==payround_account.key() @ ErrorCode::KeysDontMatch
     )]
     pub task:Box< Account<'info, Task>>,
 
+    #[account(has_one=tasklist)]
     pub task_group: Account<'info, TaskGroup>,
 
     #[account(mut)]
     pub tasklist: AccountLoader<'info, Tasklist>,
 
-    /// Who's paying
-    #[account(mut)]
-    pub pay_to: SystemAccount<'info>,
-
-    /// Address to assign to the newly created Thread
-    // #[account(mut, address = Thread::pubkey(payround_account.key(), task.key()))]
-    #[account(mut)]
+    #[account(
+        mut, 
+        address=thread.pubkey(),
+        constraint=thread.pubkey()==task.thread @ ErrorCode::KeysDontMatch, 
+        constraint=thread.authority==payround_account.key() @ ErrorCode::KeysDontMatch
+    )]
     pub thread: Box<Account<'info, Thread>>,
 
-    /// Thread Admin, not signer but it will be use to pseudo-sign by the driver program
-    pub payround_account: Box<Account<'info, PayroundAccount>>, // * will be the thread authority
+    pub user_id: SystemAccount<'info>,
+
+    #[account(
+        mut,
+        seeds=[user_id.key().as_ref(), PAYROUND_SEED.as_ref()],
+        bump=payround_account.bump,
+        has_one=authority,
+        has_one=user_id
+    )]
+    pub payround_account: Box<Account<'info, PayroundAccount>>,
+ 
 }
 
 impl<'info> DeleteTask<'info> {
@@ -46,7 +60,7 @@ impl<'info> DeleteTask<'info> {
         let cpi_accounts = clockwork_sdk::cpi::ThreadDelete {
             authority: self.payround_account.to_account_info(),
             thread: self.thread.to_account_info(),
-            close_to: self.pay_to.to_account_info()
+            close_to: self.authority.to_account_info()
         };
         let cpi_program = self.clockwork_program.to_account_info();
 
@@ -57,7 +71,7 @@ impl<'info> DeleteTask<'info> {
 pub fn handler(ctx: Context<DeleteTask>) -> Result<()> {
     clockwork_sdk::cpi::thread_delete(
         ctx.accounts.into_delete_thread_context().with_signer(&[&[
-            ctx.accounts.payround_account.authority.key().as_ref(),
+            ctx.accounts.payround_account.user_id.key().as_ref(),
             PAYROUND_SEED.as_ref(),
             &[ctx.accounts.payround_account.bump],
         ]]),
@@ -65,7 +79,7 @@ pub fn handler(ctx: Context<DeleteTask>) -> Result<()> {
     
     let task_pubkey = ctx.accounts.task.key();
     let mut tasklist = ctx.accounts.tasklist.load_mut()?;
-    tasklist.add_task(task_pubkey);
+    tasklist.remove_task(task_pubkey)?;
 
     Ok(())
 }

@@ -18,20 +18,24 @@ import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pub
 import Manager from "./keypair/manager";
 import key2 from "./keypair/degen";
 
+const adminpair = Uint8Array.from(JSON.parse(fs.readFileSync("/Users/thewuh/.config/solana/payround_admin.json", "utf-8")))
+
 const degenpair = Uint8Array.from(key2);
 const managerpair = Uint8Array.from(Manager);
+
 
 const usdcMint = new PublicKey("48JBvpStoDYJmQBFuENcCm6dBomPC2z9r4SfJJa9ui9H");
 
 const degen = Keypair.fromSecretKey(degenpair);
 const manager = Keypair.fromSecretKey(managerpair);
+const admin = Keypair.fromSecretKey(adminpair);
 
-export const keys = { manager, degen, usdcMint };
+export const keys = { manager, degen, usdcMint, admin };
 
 export const connection = new Connection("https://api.devnet.solana.com/", {commitment: "singleGossip", });
 export const provider = new anchor.AnchorProvider(
 	connection,
-	new anchor.Wallet(manager),
+	new anchor.Wallet(admin),
 	{}
 );
 anchor.setProvider(provider);
@@ -68,7 +72,7 @@ export const createUsdcMint = async () => {
 	);
 };
 
-export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (sec: number) => new Promise((resolve) => setTimeout(resolve, sec * 1000));
 
 export const usdcMinter = async (mint: PublicKey = usdcMint) => {
 	try {
@@ -113,29 +117,24 @@ export const usdcMinter = async (mint: PublicKey = usdcMint) => {
 	}
 };
 
-// export const usdcTransfer = async (
-// 	to: "managerAta" | "degenAta" | "emailAta" | "degenAcctAta",
-// 	uiAmount: number,
-// 	mint: PublicKey = usdcMint
-// ) => {
-// 	return await transfer(
-// 		connection,
-// 		manager,
-// 		getAta(mint).managerAta,
-// 		getAta(mint)[to],
-// 		manager,
-// 		uiAmount * 10 ** 6
-// 	);
-// };
-
-// export const vaultName = Keypair.generate().publicKey.toString().slice(0, 7);
-
 export const getPda = (userId: PublicKey) => {
 	return findProgramAddressSync(
 		[userId.toBuffer(), Buffer.from("payround")],
 		program.programId
 	);
 };
+
+export const solanaExploerer = (tx: string) => {
+	console.log(
+		`tx: https://solscan.io/tx/${tx}?cluster=devnet`
+	);
+}
+
+export const clockworkExploerer = (thread: PublicKey) => {
+	console.log(
+		`tx: https://explorer.clockwork.xyz/address/${thread.toBase58()}?network=devnet`
+	);
+}
 
 class UsdcManager {
 	static decimals: number = 6;
@@ -149,13 +148,6 @@ class UsdcManager {
 		this.owner = owner;
 		this.mint = mint
 	}
-
-	// static async load() {
-	// 	if (!this.mint) this.mint = await this.createusdcMint();
-	// 	console.log("mint:", this.mint.toBase58());
-		
-	// 	return this.mint;
-	// }
 
 	static async createusdcMint() {
 		return await createMint(
@@ -233,18 +225,18 @@ class UsdcManager {
 
 
 export class PayroundAccount {
-	owner: Keypair;
+	authority: Keypair;
 	usdcManager: UsdcManager;
 	id: PublicKey
 	// email: boolean
 	mint: PublicKey;
 
 	constructor(keypair: Keypair, mint: PublicKey, id?: PublicKey) {
-		this.owner = keypair;
+		this.authority = keypair;
 		this.mint = mint;
-		this.id = id ? id : this.owner.publicKey
+		this.id = id ? id : this.authority.publicKey
 		// this.email = id ? true : false
-		this.usdcManager = new UsdcManager(this.mint, this.owner);
+		this.usdcManager = new UsdcManager(this.mint, this.authority);
 	}
 
 	async load() {
