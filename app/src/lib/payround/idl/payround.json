@@ -1,0 +1,954 @@
+{
+  "version": "0.1.0",
+  "name": "payround",
+  "instructions": [
+    {
+      "name": "createEmailAccount",
+      "accounts": [
+        {
+          "name": "emailAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "usdcTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "createDegenAccount",
+      "accounts": [
+        {
+          "name": "payroundAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "desc",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "closePayroundAccount",
+      "accounts": [
+        {
+          "name": "payroundAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "usdcTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "createTask",
+      "accounts": [
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "trigger",
+          "type": {
+            "defined": "ClockworkTrigger"
+          }
+        }
+      ]
+    },
+    {
+      "name": "processTask",
+      "accounts": [
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "accountAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recipientAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [],
+      "returns": {
+        "defined": "ThreadResponse"
+      }
+    },
+    {
+      "name": "startTask",
+      "accounts": [
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "accountAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recipientAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "pauseTask",
+      "accounts": [
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Clockwork Program (Thread Program)"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resumeTask",
+      "accounts": [
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deleteTask",
+      "accounts": [
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Clockwork Program (Thread Program)"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "updateTaskDetails",
+      "accounts": [
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "taskOptions",
+          "type": {
+            "defined": "TaskOptions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdrawTaskCredit",
+      "accounts": [
+        {
+          "name": "clockworkProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Clockwork Program (Thread Program)"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "creditTask",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "task",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "thread",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "makeTransfer",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userId",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payroundAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "accountAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recipientAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PayroundAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "userId",
+            "type": "publicKey"
+          },
+          {
+            "name": "usdcTokenAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "email",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Task",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "taskGroup",
+            "type": "publicKey"
+          },
+          {
+            "name": "account",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "recipient",
+            "type": "publicKey"
+          },
+          {
+            "name": "thread",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "trigger",
+            "type": {
+              "defined": "ClockworkTrigger"
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "TaskStatus"
+            }
+          },
+          {
+            "name": "label",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TaskGroup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "account",
+            "type": "publicKey"
+          },
+          {
+            "name": "tasklist",
+            "type": "publicKey"
+          },
+          {
+            "name": "desc",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tasklist",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "taskGroup",
+            "type": "publicKey"
+          },
+          {
+            "name": "count",
+            "type": "u16"
+          },
+          {
+            "name": "max",
+            "type": "u16"
+          },
+          {
+            "name": "list",
+            "type": {
+              "array": [
+                "publicKey",
+                1000
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "TaskOptions",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "scheduleOptions",
+            "type": {
+              "option": {
+                "defined": "ClockworkTrigger"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClockworkTrigger",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Account",
+            "fields": [
+              {
+                "name": "address",
+                "docs": [
+                  "The address of the account to monitor."
+                ],
+                "type": "publicKey"
+              },
+              {
+                "name": "offset",
+                "docs": [
+                  "The byte offset of the account data to monitor."
+                ],
+                "type": "u64"
+              },
+              {
+                "name": "size",
+                "docs": [
+                  "The size of the byte slice to monitor (must be less than 1kb)"
+                ],
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Cron",
+            "fields": [
+              {
+                "name": "schedule",
+                "docs": [
+                  "The schedule in cron syntax. Value must be parsable by the `clockwork_cron` package."
+                ],
+                "type": "string"
+              },
+              {
+                "name": "skippable",
+                "docs": [
+                  "Boolean value indicating whether triggering moments may be skipped if they are missed (e.g. due to network downtime).",
+                  "If false, any \"missed\" triggering moments will simply be executed as soon as the network comes back online."
+                ],
+                "type": "bool"
+              }
+            ]
+          },
+          {
+            "name": "Now"
+          },
+          {
+            "name": "Slot",
+            "fields": [
+              {
+                "name": "slot",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Epoch",
+            "fields": [
+              {
+                "name": "epoch",
+                "type": "u64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "TaskStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Notstarted"
+          },
+          {
+            "name": "Started"
+          },
+          {
+            "name": "Paused"
+          },
+          {
+            "name": "Ended"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NotAdmin",
+      "msg": "Admin Signer Only"
+    },
+    {
+      "code": 6001,
+      "name": "MaxDescLenghtExceeded",
+      "msg": "Desc characters greater than max lenght"
+    },
+    {
+      "code": 6002,
+      "name": "KeysDontMatch",
+      "msg": "The provided keys do not match"
+    },
+    {
+      "code": 6003,
+      "name": "MaxLimitReached",
+      "msg": "Limit reached. Cannot add task or group"
+    }
+  ],
+  "metadata": {
+    "address": "BQpMmaGZ9wgYvUQGcBarTr3puuDid1W3tUj7Fz3pWUkV"
+  }
+}
