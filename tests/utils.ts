@@ -17,6 +17,8 @@ import {
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import Manager from "./keypair/manager";
 import key2 from "./keypair/degen";
+import { bs58 } from "@project-serum/anchor/dist/cjs/utils/bytes";
+import { SEED_THREAD } from "@clockwork-xyz/sdk";
 
 const adminpair = Uint8Array.from(JSON.parse(fs.readFileSync("/Users/thewuh/.config/solana/payround_admin.json", "utf-8")))
 
@@ -30,7 +32,11 @@ const degen = Keypair.fromSecretKey(degenpair);
 const manager = Keypair.fromSecretKey(managerpair);
 const admin = Keypair.fromSecretKey(adminpair);
 
-export const keys = { manager, degen, usdcMint, admin };
+export const clockworkProgram = new PublicKey(
+	"CLoCKyJ6DXBJqqu2VWx9RLbgnwwR6BMHHuyasVmfMzBh"
+);
+
+export const keys = { manager, degen, usdcMint, admin, clockworkProgram };
 
 export const connection = new Connection("https://api.devnet.solana.com/", {commitment: "singleGossip", });
 export const provider = new anchor.AnchorProvider(
@@ -71,6 +77,8 @@ export const createUsdcMint = async () => {
 		6
 	);
 };
+
+
 
 export const sleep = (sec: number) => new Promise((resolve) => setTimeout(resolve, sec * 1000));
 
@@ -256,6 +264,13 @@ export class PayroundAccount {
 			[this.id.toBuffer(), Buffer.from("payround")],
 			program.programId
 		)[1];
+	}
+
+	threadKey (taskKey: PublicKey) {
+		return findProgramAddressSync(
+			[Buffer.from(SEED_THREAD), taskKey.toBuffer(), Buffer.from(taskKey.toBase58().slice(0,10))],
+			clockworkProgram
+		)[0]
 	}
 
 	async transferUsdcToSelf (amount: number) {

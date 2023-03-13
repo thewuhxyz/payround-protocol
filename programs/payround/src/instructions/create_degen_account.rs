@@ -2,7 +2,9 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{TokenAccount, Mint, Token};
 use anchor_spl::associated_token::AssociatedToken;
 
-use crate::state::{PayroundAccount, TaskGroup, Tasklist};
+use crate::state::{PayroundAccount, 
+  // TaskGroup, Tasklist
+};
 use crate::constants::*;
 use crate::error::ErrorCode;
 
@@ -25,15 +27,15 @@ pub struct CreateDegenAccount <'info> {
   )]
   pub usdc_token_account: Account<'info, TokenAccount>,
 
-  #[account(
-    init,
-    payer=authority,
-    space=8+TaskGroup::LEN
-  )]
-  pub default_group: Account<'info, TaskGroup>,
+  // #[account(
+  //   init,
+  //   payer=authority,
+  //   space=8+TaskGroup::LEN
+  // )]
+  // pub default_group: Account<'info, TaskGroup>,
 
-  #[account(zero)]
-  pub tasklist: AccountLoader<'info, Tasklist>,
+  // #[account(zero)]
+  // pub tasklist: AccountLoader<'info, Tasklist>,
   
   pub token_mint: Account<'info, Mint>,
 
@@ -59,26 +61,26 @@ pub fn handler (ctx: Context<CreateDegenAccount>, bump: u8, desc: String) -> Res
 
   let account_key = ctx.accounts.payround_account.key();
 
-  let group_key = ctx.accounts.default_group.key();
-  let tasklist_key = ctx.accounts.tasklist.key();
+  // let group_key = ctx.accounts.default_group.key();
+  // let tasklist_key = ctx.accounts.tasklist.key();
 
-  ctx.accounts.default_group.init(
-        group_key,
-        ctx.accounts.authority.key(),
-        ctx.accounts.payround_account.key(),
-        tasklist_key,
-        desc,
-    );
+  // ctx.accounts.default_group.init(
+  //       group_key,
+  //       ctx.accounts.authority.key(),
+  //       ctx.accounts.payround_account.key(),
+  //       tasklist_key,
+  //       desc,
+  //   );
 
-    let mut tasklist = ctx.accounts.tasklist.load_init()?;
-    tasklist.init(group_key);
+  //   let mut tasklist = ctx.accounts.tasklist.load_init()?;
+  //   tasklist.init(group_key);
 
   ctx.accounts.payround_account.init(
     account_key,
     ctx.accounts.authority.key(),
     ctx.accounts.authority.key(),
     ctx.accounts.usdc_token_account.key(),
-    group_key,
+    // group_key,
     bump,
     false
   )?;

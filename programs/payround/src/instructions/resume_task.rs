@@ -64,7 +64,7 @@ pub fn handler(ctx: Context<ResumeTask>) -> Result<()> {
         &[ctx.accounts.payround_account.bump],
     ]]))?;
 
-    ctx.accounts.task.status = TaskStatus::STARTED;
+    ctx.accounts.task.status = TaskStatus::Started;
 
     Ok(())
 }

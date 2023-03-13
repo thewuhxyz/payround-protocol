@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::{SEED_THREAD, MAX_TASK, MAX_GROUP};
+use crate::constants::{SEED_THREAD, MAX_TASK };
 use crate::error::ErrorCode;
 
 #[account]
@@ -9,11 +9,11 @@ pub struct PayroundAccount {
     pub authority: Pubkey, //32
     pub user_id: Pubkey, // 32
     pub usdc_token_account: Pubkey, // 32
-    pub max_group: u8, // 1
-    pub group_count: u8, // 1
+    // pub max_group: u8, // 1
+    // pub group_count: u8, // 1
     pub email: bool, // 1
     pub bump: u8, // 1
-    pub task_groups: Vec<Pubkey>, // 24 + 32*32
+    // pub task_groups: Vec<Pubkey>, // 24 + 32*32
 }
 
 impl PayroundAccount {
@@ -25,7 +25,7 @@ impl PayroundAccount {
         authority: Pubkey,
         user_id: Pubkey,
         usdc_token_key: Pubkey,
-        group_key: Pubkey,
+        // group_key: Pubkey,
         bump: u8,
         email: bool,
     ) -> Result<()> {
@@ -35,40 +35,40 @@ impl PayroundAccount {
         self.usdc_token_account = usdc_token_key;
         self.bump = bump;
         self.email = email;
-        self.task_groups = Vec::with_capacity(32);
-        self.max_group = MAX_GROUP as u8;
-        self.group_count = 0;
-        self.add_group(group_key)?;
+        // self.task_groups = Vec::with_capacity(32);
+        // self.max_group = MAX_GROUP as u8;
+        // self.group_count = 0;
+        // self.add_group(group_key)?;
         Ok(())
     }
 
-    pub fn add_group(&mut self, group_key: Pubkey) -> Result<()> {
-        if self.group_count >= self.max_group {
-            return err!(ErrorCode::MaxLimitReached)
-        }
-        self.task_groups.push(group_key);
-        self.group_count = self.group_count.checked_add(1).unwrap();
-        Ok(())
-    }
+    // pub fn add_group(&mut self, group_key: Pubkey) -> Result<()> {
+    //     if self.group_count >= self.max_group {
+    //         return err!(ErrorCode::MaxLimitReached)
+    //     }
+    //     self.task_groups.push(group_key);
+    //     self.group_count = self.group_count.checked_add(1).unwrap();
+    //     Ok(())
+    // }
 
-    pub fn remove_group(&mut self, group_key: Pubkey) -> Result<()> {
-        let index = self.task_groups.iter().position(|&x| x == group_key).unwrap();
-        self.task_groups.remove(index);
-        self.group_count = self.group_count.checked_sub(1).unwrap();
-        Ok(())
-    }
+    // pub fn remove_group(&mut self, group_key: Pubkey) -> Result<()> {
+    //     let index = self.task_groups.iter().position(|&x| x == group_key).unwrap();
+    //     self.task_groups.remove(index);
+    //     self.group_count = self.group_count.checked_sub(1).unwrap();
+    //     Ok(())
+    // }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct Schedule {
-    pub freq: String,
-    pub skippable: bool
-}
+// #[derive(AnchorSerialize, AnchorDeserialize)]
+// pub struct Schedule {
+//     pub freq: String,
+//     pub skippable: bool
+// }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct TaskOptions {
     pub amount: Option<u64>,
-    pub schedule_options: Option<Schedule>
+    pub schedule_options: Option<ClockworkTrigger>
 }
 
 #[account]
@@ -81,11 +81,12 @@ pub struct Task {
     pub thread: Pubkey, // 32
     pub bump: u8, // 1
     pub amount: u64, // 8
-    pub skippable: bool, // 1
+    pub trigger: ClockworkTrigger,
     pub status: TaskStatus, // 1+1
-    pub label: String, // 4 + 32
-    pub desc: String, // 4 + 32
-    pub freq: String,  // 100
+    pub label: Vec<u8>, // 4 + 32
+    // pub desc: String, // 4 + 32
+    // pub skippable: bool, // 1
+    // pub freq: String,  // 100
 }
 
 impl Task {
@@ -95,26 +96,28 @@ impl Task {
         &mut self,
         ammount: u64,
         pubkey: Pubkey,
-        task_group_key: Pubkey,
+        // task_group_key: Pubkey,
         account: Pubkey,
         authority: Pubkey,
-        recipient_ata: Pubkey,
-        desc: String,
-        freq: String,
-        skippable: bool
+        recipient: Pubkey,
+        // desc: String,
+        // freq: String,
+        // skippable: bool
+        trigger: ClockworkTrigger
     ) {
         self.amount = ammount;
         self.pubkey = pubkey;
-        self.task_group = task_group_key;
+        // self.task_group = task_group_key;
         self.authority = authority;
-        self.recipient = recipient_ata;
+        self.recipient = recipient;
         self.account = account;
-        self.desc = desc;
-        self.freq = freq;
-        self.skippable = skippable;
+        // self.desc = desc;
+        self.trigger = trigger;
+        // self.freq = freq;
+        // self.skippable = skippable;
         
         let task_key_str = bs58::encode(self.pubkey).into_string();
-        self.label = task_key_str.split_at(10).0.to_string();
+        self.label = task_key_str.split_at(10).0.to_string().try_to_vec().unwrap();
         
         (self.thread, self.bump) = Pubkey::find_program_address(
             &[SEED_THREAD, account.as_ref(), self.label.as_ref()],
@@ -132,18 +135,69 @@ impl Task {
         }
     }
 
-    pub fn update_schedule(&mut self, freq: String, skippable: bool) {
-        self.freq = freq;
-        self.skippable = skippable;
+    pub fn update_trigger(&mut self, trigger: ClockworkTrigger) {
+        self.trigger = trigger;
+    }
+}
+
+
+// #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug, PartialEq, Eq)]
+// pub enum TriggerType {
+//     CRON = 0,
+//     INTERVAL = 1,
+// };
+
+
+#[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, PartialEq)]
+pub enum ClockworkTrigger {
+    /// Allows a thread to be kicked off whenever the data of an account changes.
+    Account {
+        /// The address of the account to monitor.
+        address: Pubkey,
+        /// The byte offset of the account data to monitor.
+        offset: u64,
+        /// The size of the byte slice to monitor (must be less than 1kb)
+        size: u64,
+    },
+
+    /// Allows an thread to be kicked off according to a one-time or recurring schedule.
+    Cron {
+        /// The schedule in cron syntax. Value must be parsable by the `clockwork_cron` package.
+        schedule: String,
+
+        /// Boolean value indicating whether triggering moments may be skipped if they are missed (e.g. due to network downtime).
+        /// If false, any "missed" triggering moments will simply be executed as soon as the network comes back online.
+        skippable: bool,
+    },
+
+    /// Allows an thread to be kicked off as soon as it's created.
+    Now,
+
+    /// Allows a thread to be kicked off according to a slot.
+    Slot { slot: u64 },
+
+    /// Allows a thread to be kicked off according to an epoch number.
+    Epoch { epoch: u64 },
+}
+
+impl From<ClockworkTrigger> for clockwork_sdk::state::Trigger {
+    fn from(x: ClockworkTrigger) -> Self {
+        match x {
+            ClockworkTrigger::Cron { schedule, skippable } => Self::Cron { schedule, skippable},
+            ClockworkTrigger::Account { address, offset, size } => Self::Account { address, offset, size },
+            ClockworkTrigger::Epoch { epoch } => Self::Epoch { epoch },
+            ClockworkTrigger::Now => Self::Now,
+            ClockworkTrigger::Slot { slot } => Self::Slot { slot },         
+        }
     }
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TaskStatus {
-    NOTSTARTED = 0,
-    STARTED = 1,
-    PAUSED = 2,
-    ENDED = 3,
+    Notstarted,
+    Started,
+    Paused,
+    Ended,
 }
 
 #[account]

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use clockwork_sdk::state::{Thread, ThreadSettings, ThreadAccount, Trigger};
+use clockwork_sdk::state::{Thread, ThreadSettings, ThreadAccount };
 use clockwork_sdk::ThreadProgram;
 
 use crate::error::ErrorCode;
@@ -66,17 +66,19 @@ pub fn handler(ctx: Context<UpdateTaskDetails>, task_options: TaskOptions) -> Re
         ctx.accounts.task.update_amount(amount);
     };
 
-    if let Some(schedule) =  task_options.schedule_options {
+    if let Some(trigger) =  task_options.schedule_options {
 
-        let trigger = Trigger::Cron {
-            schedule: schedule.freq.clone(),
-            skippable: schedule.skippable,
-        };
+        // let trigger = Trigger::Cron {
+        //     schedule: schedule.freq.clone(),
+        //     skippable: schedule.skippable,
+        // };
+        let trigger = trigger;
         let thread_settings: ThreadSettings = ThreadSettings {
             fee: None,
-            kickoff_instruction: None,
             rate_limit: None,
-            trigger: Some(trigger),
+            trigger: Some(trigger.clone().into()),
+            instructions: None,
+            name: None
         };
 
         clockwork_sdk::cpi::thread_update(
@@ -88,7 +90,7 @@ pub fn handler(ctx: Context<UpdateTaskDetails>, task_options: TaskOptions) -> Re
             thread_settings,
         )?;
 
-        ctx.accounts.task.update_schedule(schedule.freq.clone(), schedule.skippable)
+        ctx.accounts.task.update_trigger(trigger)
     }
     Ok(())
 }

@@ -4,7 +4,9 @@ use clockwork_sdk::ThreadProgram;
 
 use crate::constants::PAYROUND_SEED;
 use crate::error::ErrorCode;
-use crate::state::{PayroundAccount, Task, TaskGroup, Tasklist};
+use crate::state::{PayroundAccount, Task, 
+    // TaskGroup, Tasklist
+};
 
 #[derive(Accounts)]
 // #[instruction(thread_label: String)]
@@ -20,17 +22,17 @@ pub struct DeleteTask<'info> {
       mut,
       close=authority,
       has_one=authority,
-      has_one=task_group,
+    //   has_one=task_group,
       has_one=thread,
       constraint=task.account==payround_account.key() @ ErrorCode::KeysDontMatch
     )]
     pub task:Box< Account<'info, Task>>,
 
-    #[account(has_one=tasklist)]
-    pub task_group: Account<'info, TaskGroup>,
+    // #[account(has_one=tasklist)]
+    // pub task_group: Account<'info, TaskGroup>,
 
-    #[account(mut)]
-    pub tasklist: AccountLoader<'info, Tasklist>,
+    // #[account(mut)]
+    // pub tasklist: AccountLoader<'info, Tasklist>,
 
     #[account(
         mut, 
@@ -40,7 +42,8 @@ pub struct DeleteTask<'info> {
     )]
     pub thread: Box<Account<'info, Thread>>,
 
-    pub user_id: SystemAccount<'info>,
+    /// CHECK: user_id
+    pub user_id: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -77,9 +80,9 @@ pub fn handler(ctx: Context<DeleteTask>) -> Result<()> {
         ]]),
     )?;
     
-    let task_pubkey = ctx.accounts.task.key();
-    let mut tasklist = ctx.accounts.tasklist.load_mut()?;
-    tasklist.remove_task(task_pubkey)?;
+    // let task_pubkey = ctx.accounts.task.key();
+    // let mut tasklist = ctx.accounts.tasklist.load_mut()?;
+    // tasklist.remove_task(task_pubkey)?;
 
     Ok(())
 }
