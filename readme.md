@@ -1,3 +1,3 @@
 **Payround Protocol**
 
-Send, Receive, Automate Payments
+Send, Receive, Automate Payments with Payround
