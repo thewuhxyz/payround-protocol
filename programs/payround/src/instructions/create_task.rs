@@ -1,9 +1,12 @@
-use crate::{error::ErrorCode, state::TaskStatus};
+use crate::{state::{TaskStatus, ClockworkTrigger}};
 use anchor_lang::prelude::*;
+// use clockwork_sdk::state::Trigger;
 
 use crate::{
     constants::*,
-    state::{PayroundAccount, Task, TaskGroup, Tasklist},
+    state::{PayroundAccount, Task, 
+        // TaskGroup, Tasklist
+    },
 };
 
 #[derive(Accounts)]
@@ -26,14 +29,14 @@ pub struct CreateTask<'info> {
     pub payround_account: Box<Account<'info, PayroundAccount>>,
 
 
-    #[account(
-    mut,
-    has_one=authority,
-    )]
-    pub task_group: Account<'info, TaskGroup>,
+    // #[account(
+    // mut,
+    // has_one=authority,
+    // )]
+    // pub task_group: Account<'info, TaskGroup>,
 
-    #[account(mut)]
-    pub tasklist: AccountLoader<'info, Tasklist>,
+    // #[account(mut)]
+    // pub tasklist: AccountLoader<'info, Tasklist>,
 
     /// CHECK: recipient account
     pub recipient: AccountInfo<'info>,
@@ -45,29 +48,28 @@ pub struct CreateTask<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<CreateTask>, amount: u64, desc: String, freq: String, skippable: bool) -> Result<()> {
-    if desc.len() > MAX_DESC_CHAR {
-        return err!(ErrorCode::MaxDescLenghtExceeded);
-    }
+pub fn handler(ctx: Context<CreateTask>, amount: u64, trigger: ClockworkTrigger) -> Result<()> {
+    // if desc.len() > MAX_DESC_CHAR {
+    //     return err!(ErrorCode::MaxDescLenghtExceeded);
+    // }
 
     let task_pubkey = ctx.accounts.task.key();
 
     ctx.accounts.task.new(
         amount,
         task_pubkey,
-        ctx.accounts.task_group.key(),
+        // ctx.accounts.task_group.key(),
         ctx.accounts.payround_account.key(),
         ctx.accounts.authority.key(),
         ctx.accounts.recipient.key(),
-        desc,
-        freq,
-        skippable
+        // desc,
+        trigger,
     );
 
-    ctx.accounts.task.status = TaskStatus::NOTSTARTED;
+    ctx.accounts.task.status = TaskStatus::Notstarted;
 
-    let mut tasklist = ctx.accounts.tasklist.load_mut()?;
-    tasklist.add_task(task_pubkey)?;
+    // let mut tasklist = ctx.accounts.tasklist.load_mut()?;
+    // tasklist.add_task(task_pubkey)?;
 
     Ok(())
 }

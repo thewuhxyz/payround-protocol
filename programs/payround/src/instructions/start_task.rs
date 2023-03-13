@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use clockwork_sdk::state::Trigger;
+// use clockwork_sdk::state::Trigger;
 use clockwork_sdk::ThreadProgram;
 use solana_program::instruction::Instruction;
 use solana_program::sysvar;
@@ -28,6 +28,8 @@ pub struct StartTask<'info> {
     )]
     pub task: Box<Account<'info, Task>>,
 
+    // #[account(mut)]
+    // pub thread: Account<'info, Thread>,
     #[account(mut)]
     pub thread: SystemAccount<'info>,
 
@@ -89,7 +91,7 @@ impl<'info> StartTask<'info> {
     }
 }
 
-pub fn handler(ctx: Context<StartTask>) -> Result<()> {
+pub fn handler(ctx: Context<StartTask>, amount: u64) -> Result<()> {
     let target_ix_acct = crate::accounts::ProcessTask {
         account_ata: ctx.accounts.account_ata.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
@@ -114,13 +116,15 @@ pub fn handler(ctx: Context<StartTask>) -> Result<()> {
         data: crate::instruction::ProcessTask {}.data(),
     };
 
-    let freq = ctx.accounts.task.freq.clone();
-    let skippable = ctx.accounts.task.skippable;
+    // let freq = ctx.accounts.task.freq.clone();
+    // let skippable = ctx.accounts.task.skippable;
 
-    let trigger = Trigger::Cron {
-        schedule: freq,
-        skippable,
-    };
+    // let trigger = Trigger::Cron {
+    //     schedule: freq,
+    //     skippable,
+    // };
+
+    let trigger = ctx.accounts.task.trigger.clone();
 
     clockwork_sdk::cpi::thread_create(
         ctx.accounts.into_start_task_context().with_signer(&[&[
@@ -128,12 +132,13 @@ pub fn handler(ctx: Context<StartTask>) -> Result<()> {
             PAYROUND_SEED.as_ref(),
             &[ctx.accounts.payround_account.bump],
         ]]),
+        amount,
         ctx.accounts.task.label.clone(),
-        target_ix.into(),
-        trigger,
+        vec![target_ix.into()],
+        trigger.into(),
     )?;
 
-    ctx.accounts.task.status = TaskStatus::STARTED;
+    ctx.accounts.task.status = TaskStatus::Started;
 
     Ok(())
 }

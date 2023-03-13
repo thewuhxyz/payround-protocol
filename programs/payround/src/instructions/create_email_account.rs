@@ -2,7 +2,9 @@ use anchor_lang::{prelude::*};
 use anchor_spl::token::{TokenAccount, Mint, Token};
 use anchor_spl::associated_token::AssociatedToken;
 
-use crate::state::{PayroundAccount, TaskGroup, Tasklist};
+use crate::state::{PayroundAccount,
+  //  TaskGroup, Tasklist
+  };
 use crate::constants::*;
 use crate::error::ErrorCode;
 
@@ -22,15 +24,15 @@ pub struct CreateEmailAccount <'info> {
   
   pub user_id: SystemAccount<'info>,
 
-  #[account(
-    init,
-    payer=authority,
-    space=8+TaskGroup::LEN
-  )]
-  pub default_group: Account<'info, TaskGroup>,
+  // #[account(
+  //   init,
+  //   payer=authority,
+  //   space=8+TaskGroup::LEN
+  // )]
+  // pub default_group: Account<'info, TaskGroup>,
 
-  #[account(zero)]
-    pub tasklist: AccountLoader<'info, Tasklist>,
+  // #[account(zero)]
+  //   pub tasklist: AccountLoader<'info, Tasklist>,
 
   #[account(
     init,
@@ -53,21 +55,21 @@ pub struct CreateEmailAccount <'info> {
 
 }
 
-pub fn handler (ctx: Context<CreateEmailAccount>, bump: u8, desc: String) -> Result<()> {
-   let group_key = ctx.accounts.default_group.key();
-  let tasklist_key = ctx.accounts.tasklist.key();
+pub fn handler (ctx: Context<CreateEmailAccount>, bump: u8,) -> Result<()> {
+  //  let group_key = ctx.accounts.default_group.key();
+  // let tasklist_key = ctx.accounts.tasklist.key();
 
 
-   ctx.accounts.default_group.init(
-        group_key,
-        ctx.accounts.authority.key(),
-        ctx.accounts.email_account.key(),
-        tasklist_key,
-        desc,
-    );
+  //  ctx.accounts.default_group.init(
+  //       group_key,
+  //       ctx.accounts.authority.key(),
+  //       ctx.accounts.email_account.key(),
+  //       tasklist_key,
+  //       desc,
+  //   );
 
-    let mut tasklist = ctx.accounts.tasklist.load_init()?;
-    tasklist.init(group_key);
+  //   let mut tasklist = ctx.accounts.tasklist.load_init()?;
+  //   tasklist.init(group_key);
 
   let account_key = ctx.accounts.email_account.key();
   ctx.accounts.email_account.init(
@@ -75,7 +77,7 @@ pub fn handler (ctx: Context<CreateEmailAccount>, bump: u8, desc: String) -> Res
     ctx.accounts.authority.key(),
     ctx.accounts.user_id.key(),
     ctx.accounts.usdc_token_account.key(),
-    group_key,
+    // group_key,
     bump,
     true
   )?;

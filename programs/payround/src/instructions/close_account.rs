@@ -16,7 +16,8 @@ pub struct ClosePayroundAccount<'info> {
   )]
     pub payround_account: Account<'info, PayroundAccount>,
 
-    pub user_id: SystemAccount<'info>,
+    /// CHECK: user id
+    pub user_id: AccountInfo<'info>,
 
     #[account(
     mut,

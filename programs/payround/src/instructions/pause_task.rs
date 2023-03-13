@@ -64,7 +64,7 @@ pub fn handler(ctx: Context<PauseTask>) -> Result<()> {
         &[ctx.accounts.payround_account.bump],
     ]]))?;
 
-    ctx.accounts.task.status = TaskStatus::PAUSED;
+    ctx.accounts.task.status = TaskStatus::Paused;
 
     Ok(())
 }

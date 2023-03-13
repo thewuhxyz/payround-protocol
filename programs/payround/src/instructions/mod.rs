@@ -13,6 +13,7 @@ pub mod delete_task;
 pub mod change_task_group;
 pub mod withdraw_credit;
 pub mod update_task_details;
+pub mod make_transfer;
 
 
 pub use create_email_account::*;
@@ -30,3 +31,4 @@ pub use delete_task::*;
 pub use change_task_group::*;
 pub use withdraw_credit::*;
 pub use update_task_details::*;
+pub use make_transfer::*;
