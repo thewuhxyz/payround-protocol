@@ -3,16 +3,15 @@ import type { PageServerLoad } from './$types';
 import parser from "cron-parser"
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const sbHelper = locals.sbHelper
-	const session = await sbHelper.getSession();
-	// const supabase = locals.supabase;
+	const session = await locals.getSession();
+	const supabase = locals.supabase;
 	// const payroundAdmin = locals.payroundAdmin()
 	if (!session) {
 		throw redirect(303, '/');
 	}
 	const user = session.user;
-	const tasksResult = await sbHelper.getAllTasksForUser();
-	const tasksData = tasksResult;
+	const tasksResult = await supabase.from('task').select('*').eq('account_id', user.id);
+	const tasksData = tasksResult.data;
 
   const tasks = tasksData!.map((i) => {
 		let nextRunMs: number;

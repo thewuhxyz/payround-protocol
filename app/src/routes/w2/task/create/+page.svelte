@@ -87,7 +87,7 @@
 				<option value={t}
 					>{t < 10 ? `0${t}` : t}:00 {t / 12 > 1
 						? `(${t % 12 == 0 ? 12 : t % 12} pm)`
-						: `(${t % 12 == 0 ? 12 : t % 12} am)`} UTC</option
+						: `(${t % 12 == 0 ? 12 : t % 12} am)`}</option
 				>
 			{/each}
 		</select>

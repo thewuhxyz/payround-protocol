@@ -33,8 +33,6 @@ export class PayroundClient {
 	connection: anchor.web3.Connection;
 	userId: PublicKey;
 
-	
-
 	constructor(
 		public program: anchor.Program<Payround>,
 		public provider: anchor.Provider,
@@ -43,7 +41,6 @@ export class PayroundClient {
 	) {
 		this.connection = program.provider.connection;
 		this.userId = userId ? new PublicKey(userId) : this.provider.publicKey!;
-		
 	}
 
 	static connect(provider: anchor.Provider, network: string, userId?: string): PayroundClient {
@@ -114,7 +111,7 @@ export class PayroundClient {
 
 	async makeTransferTx(recipient: PublicKey, uiAmount: number): Promise<string> {
 		return await this.program.methods
-			.makeTransfer(new anchor.BN(uiAmount * 10**6))
+			.makeTransfer(new anchor.BN(uiAmount * 10 ** 6))
 			.accounts({
 				accountAta: this.usdcAddress,
 				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -230,7 +227,10 @@ export class PayroundClient {
 	async startTaskTx(task: PublicKey, amount: number): Promise<string> {
 		const taskAccount = await this.fetchTaskAccount(task);
 		console.log('recipient:', taskAccount.recipient.toBase58());
-		console.log('recipient token address:', this.getUsdcAddressFor(taskAccount.recipient).toBase58());
+		console.log(
+			'recipient token address:',
+			this.getUsdcAddressFor(taskAccount.recipient).toBase58()
+		);
 		console.log('task account thread address:', taskAccount.thread.toBase58());
 
 		return await this.program.methods
@@ -314,7 +314,7 @@ export class PayroundClient {
 				// tasklist: taskGroup.tasklist,
 				userId: this.userId
 			})
-			.rpc({skipPreflight: true});
+			.rpc({ skipPreflight: true });
 	}
 
 	async creditTaskTx(task: PublicKey, amount: number): Promise<string> {
@@ -378,9 +378,9 @@ export class PayroundClient {
 	}
 
 	async getThreadKey(taskkey: string) {
-		const taskPublicKey = new PublicKey(taskkey)
-		const task = await this.fetchTaskAccount(taskPublicKey)
-		return task.thread.toBase58()
+		const taskPublicKey = new PublicKey(taskkey);
+		const task = await this.fetchTaskAccount(taskPublicKey);
+		return task.thread.toBase58();
 	}
 
 	private _pda(userId: PublicKey) {
@@ -423,46 +423,43 @@ export class PayroundClient {
 		return await this.program.account.tasklist.fetch(key);
 	}
 
-	async formatTxData ( limit?: number) {
-		  return await this.formatTxDataFor(this.usdcAddress, limit)
+	async formatTxData(limit?: number) {
+		return await this.formatTxDataFor(this.usdcAddress, limit);
 	}
-	
-	async formatTxDataFor (address: PublicKey, limit?: number) {
-		  const txData = await getTransactionsFilterByMint(address, this.connection, {limit});
-			console.log('txData:', txData);
 
-			return txData.map((tx) => {
-				const preBal =
-					tx.parsedTx!.meta!.preTokenBalances!.filter(
-						(i) => i.owner == this.pubkey.toBase58()
-					)[0].uiTokenAmount.uiAmount || 0;
+	async formatTxDataFor(address: PublicKey, limit?: number) {
+		const txData = await getTransactionsFilterByMint(address, this.connection, { limit });
+		console.log('txData:', txData);
 
-				const postBal =
-					tx.parsedTx!.meta!.postTokenBalances!.filter(
-						(i) => i.owner == this.pubkey.toBase58()
-					)[0].uiTokenAmount.uiAmount || 0;
+		return txData.map((tx) => {
+			const preBal =
+				tx.parsedTx!.meta!.preTokenBalances!.filter((i) => i.owner == this.pubkey.toBase58())[0]
+					.uiTokenAmount.uiAmount || 0;
 
-				const out = preBal > postBal;
+			const postBal =
+				tx.parsedTx!.meta!.postTokenBalances!.filter((i) => i.owner == this.pubkey.toBase58())[0]
+					.uiTokenAmount.uiAmount || 0;
 
-				const token = tx.parsedTx!.meta!.postTokenBalances!.filter(
-					(i) => i.owner !== this.pubkey.toBase58()
-				);
+			const out = preBal > postBal;
 
-				const address = token.length == 0 ? '-' : token[0].owner;
+			const token = tx.parsedTx!.meta!.postTokenBalances!.filter(
+				(i) => i.owner !== this.pubkey.toBase58()
+			);
 
-				const amount = Math.abs(preBal - postBal);
+			const address = token.length == 0 ? '-' : token[0].owner;
 
-				return {
-					sig: tx.sigInfo.signature,
-					timeStamp: tx.sigInfo.blockTime! * 1000,
-					mint: tx.parsedTx!.meta!.preTokenBalances![0].mint,
-					out,
-					preBal,
-					postBal,
-					amount,
-					address
-				};
-			});
+			const amount = Math.abs(preBal - postBal);
 
+			return {
+				sig: tx.sigInfo.signature,
+				timeStamp: tx.sigInfo.blockTime! * 1000,
+				mint: tx.parsedTx!.meta!.preTokenBalances![0].mint,
+				out,
+				preBal,
+				postBal,
+				amount,
+				address
+			};
+		});
 	}
 }

@@ -10,13 +10,13 @@ function createBalanceStore() {
 
 	return {
 		subscribe,
-		getUserSOLBalance: async (publicKey: PublicKey, connection: Connection) => {
+		getUserUSDCBalance: async (publicKey: PublicKey, connection: Connection) => {
 
 			let balance = 0;
 
 			try {
 
-				balance = await connection.getBalance(publicKey, 'confirmed');
+				balance = (await connection.getTokenAccountBalance(publicKey, 'confirmed')).value.uiAmount || 0;
 				balance = balance / LAMPORTS_PER_SOL;
 				set({ balance });
 

@@ -4,34 +4,28 @@ import { fail, redirect, type Actions } from '@sveltejs/kit';
 
 export const actions: Actions = {
 	creategroup: async ({ request, locals }) => {
-		// const supabase = locals.supabase;
-		const sbHelper = locals.sbHelper
-		const session = await sbHelper.getSession();
-		// const payroundAdmin = locals.payroundAdmin;
-
-    if (!session) {
-			throw redirect(303, '/');
-		}
-
+		const supabase = locals.sbAdmin;
+	
     const formData = Object.fromEntries(await request.formData())
     console.log("forndata:", formData);
     
     const name = formData.name as string
     const description = formData.desc as string
+		const userId = formData.address as string
 
 		
-		const user = await sbHelper.getUser();
-		const submited = await sbHelper.sb
+		const submited = await supabase
 			.from('task_group')
 			.insert({
-        account_id: user.id,
+        user_id: userId,
         name,
         description,
+				
       })
 			.select();
 		console.log("submitted:", submited);
     
 
-		throw redirect(303, '/w2/dashboard');
+		throw redirect(303, '/w3/dashboard');
 	}
 };

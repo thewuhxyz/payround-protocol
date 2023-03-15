@@ -5,11 +5,9 @@
 	import '../app.postcss';
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { Modal, storePopup } from '@skeletonlabs/skeleton';
-	import Solana from '$lib/components/Solana.svelte';
 
-	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
-<Solana />
+<!-- <Solana /> -->
 <slot />
 <Modal/>

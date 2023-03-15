@@ -7,19 +7,26 @@
 	export let data: PageData;
 
 	const buttons = [
-		{ name: '+ Create New Task', link: '/w2/task/create' },
-		{ name: '$ Send Payment', link: '/w2/send' }
+		{ name: '+ Create New Task', link: '/w3/task/create' },
+		{ name: '$ Send Payment', link: '/w3/send' }
 	];
 
-	const tasks = data.upcomingTasks;
-	const transactions = data.txFormatedData;
+	let tasks = data.upcomingTasks.upcomingTasks;
+	let transactions = data.txFormatedData;
+
+	$: console.log("task:", tasks)
+	$: console.log("task:", transactions)
 
 	$: tasks;
 	$: transactions;
 
+	$: userCreated = data.user
+
 	// let some = transactions.map(i => i.sender)
 	// console.log("some:", some);
 </script>
+	
+
 
 <div class="flex mx-auto min-w-max max-w-lg my-20 pb-4">
 	{#each buttons as buttonItem}
@@ -76,37 +83,40 @@
 			<a href="/w2/transactions">see all</a>
 		</div>
 
-		{#if transactions}
-			<div class="table table-container p-5">
-				<table class="table table-hover">
-					<thead>
-						<tr>
-							<!-- <th>S/N</th> -->
-							<th>Address</th>
-							<th>Amount</th>
-							<th>In/Out</th>
-							<th>Timestamp</th>
-						</tr>
-					</thead>
+		<div class="table table-container p-5">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<!-- <th>S/N</th> -->
+						<th>Address</th>
+						<th>Amount</th>
+						<th>In/Out</th>
+						<th>Timestamp</th>
+					</tr>
+				</thead>
+				{#if transactions !== undefined && transactions !== null}
 					<tbody>
 						{#each transactions as row, i}
-							<tr
-								id={row.sig}
-								on:click={() => goto(`https://solscan.io/tx/${row.sig}?cluster=devnet`)}
-							>
-								<!-- <td>{i + 1}</td> -->
-								<td>{row.address != null ? truncate(row.address) : null}</td>
-								<td>{row.amount}</td>
-								<td>{row.out ? 'Out' : 'In'}</td>
-
-								<td>{formatEpoch(row.timeStamp)}</td>
-							</tr>
-						{/each}
-					</tbody>
+						
+						{#if row !== null}
+						<tr
+						id={row.sig}
+						on:click={() => goto(row && `https://solscan.io/tx/${row.sig}?cluster=devnet`)}
+						>
+						<!-- <td>{i + 1}</td> -->
+						<td>{row.address != null ? truncate(row.address) : null}</td>
+						<td>{row.amount}</td>
+						<td>{row.out ? 'Out' : 'In'}</td>
+						
+						<td>{formatEpoch(row.timeStamp)}</td>
+					</tr>
+					{/if}
+					{/each}
+				</tbody>
+				{:else}
+					<div>No Transactions Yet</div>
+				{/if}
 				</table>
 			</div>
-		{:else}
-			<div>No Transactions Yet</div>
-		{/if}
 	</div>
 </div>

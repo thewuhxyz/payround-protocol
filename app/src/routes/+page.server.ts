@@ -32,4 +32,39 @@ export const actions: Actions = {
 
 		throw redirect(303, '/verification');
 	},
+
+	// register: async ({ request, locals }) => {
+	// 	const body = Object.fromEntries(await request.formData());
+
+	// 	const { data, error: err } = await locals.sb.auth.signUp({
+	// 		email: body.email as string,
+	// 		password: body.password as string
+	// 	});
+
+	// 	if (err) {
+	// 		if (err instanceof AuthApiError && err.status === 400) {
+	// 			return fail(400, {
+	// 				error: 'Invalid email or password'
+	// 			});
+	// 		}
+
+	// 		return fail(500, {
+	// 			error: 'Server error. Try again Later'
+	// 		});
+	// 	}
+
+	// 	throw redirect(303, '/w2/dashboard');
+	// },
+
+	logout: async ({ locals }) => {
+		const { error: err } = await locals.supabase.auth.signOut();
+
+		if (err) {
+			return fail(500, {error: 'something went wrong with login you out'});
+		}
+
+		else {
+      goto("/")
+    }
+	}
 };

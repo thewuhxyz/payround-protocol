@@ -6,7 +6,7 @@
 
 	export let data: PageData;
 
-	const tasks = data.tasks!;
+	const tasks = data.tasks.tasks;
 
 	$: tasks
 
@@ -25,7 +25,7 @@
 <div class="mt-12 p-4">
 	<div class="justify-end flex p-4">
 		
-		<a class="text-primary-100" href="/w2/task/create">
+		<a class="text-primary-100" href="/w3/task/create">
 			<button
 				class="btn w-64 py-4 mx-24  text-xl text-secondary-500 border-solid border-2 rounded-full border-primary-500"
 			>
@@ -51,7 +51,7 @@
 				</thead>
 				<tbody>
 					{#each tasks as row, i}
-						<tr id={row.task_key} on:click={() => goto(`/w2/task/${row.task_key}`)}>
+						<tr id={row.task_key} on:click={() => goto(`/w3/task/${row.task_key}`)}>
 							<td>{i + 1}</td>
 							<td>{row.name}</td>
 							<td>{truncate(row.task_key)}</td>
@@ -66,6 +66,6 @@
 			</table>
 		</div>
 	{:else}
-		<div>Group List Empty</div>
+		<div>Task List Empty</div>
 	{/if}
 </div>

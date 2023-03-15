@@ -9,6 +9,10 @@
 
 	const task = data.task!;
 
+	$: task
+
+	$: console.log("task:", task)
+
   // const nextRun = parser.parseExpression(task.schedule).next().toString()
 
   // $: nextRun
@@ -20,7 +24,7 @@
 	$: task;
 
 	const deleteTask = () => {
-		fetch(`/w2/task/${task.task_key}/deletetask`, {
+		fetch(`/w3/task/${task.task_key}/deletetask`, {
 			method: 'POST'
 		});
 	};
@@ -86,14 +90,14 @@
 		</table>
 	</div>
 	<div class="grid grid-cols-3">
-		<form action="" method="post">
+		<div>
 			<button
 				formaction={paused ? '?/resume' : '?/pause'}
 				class="btn w-64 py-4 mx-24  text-xl text-secondary-500 border-solid border-2 rounded-full border-primary-500"
 			>
 				Start / Stop
 			</button>
-		</form>
+		</div>
 
 		<button
 			class="btn w-64 py-4 mx-24  text-xl text-secondary-500 border-solid border-2 rounded-full border-primary-500"

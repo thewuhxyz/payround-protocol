@@ -13,10 +13,10 @@
     <div class="text-tertiary-500">Account: {email ? email : address}</div>
 	</div>
   <div class="justify-center flex flex-col items-center">
-    <div class="text-5xl">Bal: ${balance}</div>
+    <div class="text-5xl">Bal: {balance} USDC</div>
     <div class="text-tertiary-500">Account: {address}</div>
   </div>
   <div class="justify-center  flex flex-col items-end px-10">
-    <div class="text-3xl">Task Credit: {credit}</div>
+    <div class="text-3xl">Lamports: {credit}</div>
 </div>
 </div>

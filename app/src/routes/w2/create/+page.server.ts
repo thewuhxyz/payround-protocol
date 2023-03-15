@@ -1,23 +1,26 @@
 import { goto } from '$app/navigation';
 import { createCustomStripeAccount } from '$lib/server/stripe';
 import { AuthApiError } from '@supabase/supabase-js';
-import { error, fail, redirect, type Actions } from '@sveltejs/kit';
+import { fail, redirect, type Actions } from '@sveltejs/kit';
 
 export const actions: Actions = {
 	createaccount: async ({ request, locals }) => {
 		const supabase = locals.supabase;
 		const session = await locals.getSession();
 		const payroundAdmin = locals.payroundAdmin;
-		const sbHelper = locals.sbHelper
 
 		if (!session) {
 			throw redirect(303, '/');
 		}
 
 		const user = session.user;
-		const isUserCreated = await sbHelper.isAccountCreated()
+		const isUserCreated = await supabase
+			.from('account')
+			.select('account_created')
+			.eq('id', user.id)
+			.single();
 
-		if (isUserCreated.account_created == null || !isUserCreated) {
+		if (isUserCreated.data?.account_created == null) {
 			const formData = Object.fromEntries(await request.formData());
 			console.log('forndata:', formData);
 
@@ -35,7 +38,7 @@ export const actions: Actions = {
 				console.log('stripe id:', stripeId);
 			}
 
-			const some = await sbHelper.sb
+			const some = await supabase
 				.from('account')
 				.insert({
 					id: user.id,
@@ -46,6 +49,15 @@ export const actions: Actions = {
 					email: user.email,
 					nickname: name,
 					stripe_id: stripeId
+				})
+				.select();
+			const some2 = await supabase
+				.from('user')
+				.insert({
+					user_id: userId,
+					degen: false,
+					account_key: payroundAdmin(userId).pubkey.toBase58(),
+					account_created: true
 				})
 				.select();
 			console.log('some:', some);

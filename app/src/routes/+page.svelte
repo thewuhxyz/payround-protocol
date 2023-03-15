@@ -1,22 +1,10 @@
 <script lang="ts">
-	import { balanceStore } from '$lib/stores/balance-store';
-	import { payroundClientStore } from '$lib/stores/payroundClientStore';
+	import { goto } from '$app/navigation';
 	import { LightSwitch } from '@skeletonlabs/skeleton';
-	import type { PublicKey } from '@solana/web3.js';
-	import { walletStore } from '@svelte-on-solana/wallet-adapter-core';
-
-	$: $walletStore.connected &&
-		balanceStore.getUserSOLBalance(
-			$walletStore.publicKey as PublicKey,
-			$payroundClientStore.connection
-		);
 </script>
 
 <LightSwitch />
 
-{#if $walletStore?.connected}
-	<p>SOL Balance: {($balanceStore.balance || 0).toLocaleString()}</p>
-{/if}
 <div class="flex justify-center  mx-12  mt-24">
 	<div class="grid justify-center text-primary-500 mx-4 max-w-4xl  p-4">
 		<div class="text-6xl flex items-center ">Payround</div>
@@ -53,8 +41,8 @@
 			<div class="my-2 border-t-2 border-dashed" />
 			<div class="mb-8">
 				<div class="text-center text-3xl py-3">Welcome Degen 🥷</div>
-				<button class="bg-secondary-500 w-full rounded-3xl p-4 my-2 btn" type="submit"
-					>CONNECT WALLET</button
+				<button class="bg-secondary-500 w-full rounded-3xl p-4 my-2 btn" on:click={() => {goto("/w3/")}} type="submit"
+					>LAUNCH APP</button
 				>
 			</div>
 		</div>
