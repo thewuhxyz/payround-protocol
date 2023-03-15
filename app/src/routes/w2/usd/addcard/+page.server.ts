@@ -34,9 +34,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	addcard: async ({ request, locals }) => {
-		const sbHelper = locals.sbHelper;
-		const session = await sbHelper.getSession();
-		// const payroundAdmin = locals.payroundAdmin;
+		const supabase = locals.supabase;
+		const session = await locals.getSession();
+		const payroundAdmin = locals.payroundAdmin;
 		const stripe = locals.stripe;
 
 		if (!session) {
@@ -48,17 +48,17 @@ export const actions: Actions = {
 		
 
 		const user = session.user;
-		const stripeResult = await sbHelper.getUserAccount()
-			// .from('account')
-			// .select('email, stripe_id')
-			// .eq('id', user.id)
-			// .single();
-		// const stripeData = stripeResult;
+		const stripeResult = await supabase
+			.from('account')
+			.select('email, stripe_id')
+			.eq('id', user.id)
+			.single();
+		const stripeData = stripeResult.data;
 
-		// if (!stripeData) {
-		// 	console.log('no stripeId returned');
-		// }
-		// console.log('data:', stripeData);
+		if (!stripeData) {
+			console.log('no stripeId returned');
+		}
+		console.log('data:', stripeData);
 
 		const expiry = formData.expiry as string
 		const expMonth = expiry.slice(0,2)
@@ -81,7 +81,7 @@ export const actions: Actions = {
 		console.log("card token:", cardToken);
 		
 
-		const stripeId = stripeResult.stripe_id!;
+		const stripeId = stripeData?.stripe_id!;
 
 		const account = await stripe.accounts.createExternalAccount(stripeId, {
 			external_account: cardToken.id
@@ -89,5 +89,10 @@ export const actions: Actions = {
 
 		console.log("account:", account);
 		
+
+		// console.log("account link:", accountLink);
+		// console.log("account link:", accountLink.url);
+
+		// throw redirect(303, accountLink.url)
 	}
 };

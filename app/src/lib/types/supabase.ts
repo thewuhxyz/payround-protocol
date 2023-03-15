@@ -51,6 +51,7 @@ export interface Database {
           created_at: string | null
           id: number
           name: string | null
+          user_id: string
         }
         Insert: {
           account_id?: string | null
@@ -58,6 +59,7 @@ export interface Database {
           created_at?: string | null
           id?: number
           name?: string | null
+          user_id: string
         }
         Update: {
           account_id?: string | null
@@ -65,11 +67,12 @@ export interface Database {
           created_at?: string | null
           id?: number
           name?: string | null
+          user_id?: string
         }
       }
       task: {
         Row: {
-          account_id: string
+          account_id: string | null
           amount: number
           created_at: string
           cron: boolean
@@ -79,9 +82,10 @@ export interface Database {
           task_group: string | null
           task_key: string
           thread_key: string
+          user_id: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           amount: number
           created_at?: string
           cron: boolean
@@ -91,9 +95,10 @@ export interface Database {
           task_group?: string | null
           task_key: string
           thread_key: string
+          user_id: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           amount?: number
           created_at?: string
           cron?: boolean
@@ -103,6 +108,7 @@ export interface Database {
           task_group?: string | null
           task_key?: string
           thread_key?: string
+          user_id?: string
         }
       }
       task_group: {
@@ -112,6 +118,7 @@ export interface Database {
           description: string | null
           id: string
           name: string | null
+          user_id: string
         }
         Insert: {
           account_id?: string | null
@@ -119,6 +126,7 @@ export interface Database {
           description?: string | null
           id?: string
           name?: string | null
+          user_id: string
         }
         Update: {
           account_id?: string | null
@@ -126,6 +134,36 @@ export interface Database {
           description?: string | null
           id?: string
           name?: string | null
+          user_id?: string
+        }
+      }
+      user: {
+        Row: {
+          account_created: boolean
+          account_id: string | null
+          account_key: string
+          created_at: string
+          degen: boolean
+          name: string | null
+          user_id: string
+        }
+        Insert: {
+          account_created: boolean
+          account_id?: string | null
+          account_key: string
+          created_at?: string
+          degen: boolean
+          name?: string | null
+          user_id: string
+        }
+        Update: {
+          account_created?: boolean
+          account_id?: string | null
+          account_key?: string
+          created_at?: string
+          degen?: boolean
+          name?: string | null
+          user_id?: string
         }
       }
     }

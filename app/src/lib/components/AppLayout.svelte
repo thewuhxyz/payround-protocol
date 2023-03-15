@@ -4,16 +4,18 @@
 	import PageHeader from './PageHeader.svelte';
 	import SideBar from './SideBar.svelte';
 
-	export let name: string | null;
-	export let email: string | null;
+	export let name: string;
+	export let email: string;
 	export let address: string;
-	export let balance: string | null;
+	export let balance: string;
 	export let credit: number;
+	export let hide: boolean
+	export let route: string
 </script>
 
 <AppShell slotSidebarLeft="bg-primary-500" slotHeader="bg-primary-700">
 	<svelte:fragment slot="sidebarLeft">
-		<SideBar />
+		<SideBar {email} {name} {hide} {route}  />
 	</svelte:fragment>
 	<svelte:fragment slot="header">
 		<Header />

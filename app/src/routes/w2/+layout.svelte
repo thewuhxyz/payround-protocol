@@ -13,10 +13,12 @@
 </script>
 
 <AppLayout
+	route={"w2"}
+	hide={false}
 	address={data.userAccountKey}
 	balance={balance}
 	credit={data.credits}
-	{email}
+	email={email}
 	name={nickname}
 >
 	<slot />
